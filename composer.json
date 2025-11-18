@@ -1,0 +1,21 @@
+{
+    "name": "helgispbru/evocms-translations",
+    "description": "EvolutionCMS Translations module",
+    "version": "1.0.1",
+    "license": "MIT",
+    "require": {
+        "php": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Helgispbru\\EvolutionCMS\\Translations\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Helgispbru\\EvolutionCMS\\Translations\\TranslationsServiceProvider"
+            ]
+        }
+    }
+}

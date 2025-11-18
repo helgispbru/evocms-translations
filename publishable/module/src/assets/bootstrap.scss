@@ -1,0 +1,19 @@
+.alert {
+  --bs-alert-padding-y: 0.5rem;
+}
+
+.modal {
+  &-header:empty,
+  &-footer:empty {
+    display: none;
+  }
+
+  &-header,
+  &-footer {
+    --bs-modal-header-padding: 0.5rem 1rem;
+  }
+
+  &-footer {
+    --bs-modal-footer-border-width: 0;
+  }
+}

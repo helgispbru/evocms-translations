@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        %VITE_APP_TITLE%
+    </title>
+
+    <script type="text/javascript">
+        ; (function () {
+            // dark mode
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                let d = document,
+                    g = d.documentElement
+                g.setAttribute('data-theme', 'dark')
+            }
+        })()
+    </script>
+</head>
+
+<body> <!--  class="ltr light" data-evocp="color" -->
+    <h1 class="d-none">%VITE_APP_TITLE%</h1>
+
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

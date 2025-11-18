@@ -1,0 +1,95 @@
+.datatable {
+  @media screen and (max-width: 767px) {
+    .dt-container {
+      .top > div {
+        margin-bottom: 0.5rem;
+      }
+      .bottom > div {
+        margin-top: 0.5rem;
+      }
+    }
+  }
+
+  // верх
+  .top {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 5px;
+
+    @media (min-width: 768px) {
+      align-items: center;
+      flex-direction: row;
+      gap: 20px;
+      justify-content: space-between;
+    }
+  }
+
+  // низ
+  .bottom {
+    margin-top: 1rem;
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 5px;
+
+    @media (min-width: 768px) {
+      align-items: center;
+      flex-direction: row;
+      gap: 20px;
+      justify-content: space-between;
+    }
+  }
+
+  // поиск
+  .dt-search {
+    text-align: left;
+
+    label {
+      padding-right: 20px;
+    }
+
+    input {
+      display: inline-block;
+      width: auto;
+    }
+
+    & > div {
+      max-width: 20em;
+    }
+  }
+
+  // сколько показывать
+  .dt-length {
+    text-align: left;
+    // width: 5em;
+
+    select {
+      display: inline-block;
+      width: auto;
+      margin-left: 0.5em;
+    }
+  }
+
+  // инфо
+  .dt-info {
+    text-align: left;
+  }
+
+  // страницы
+  .dt-paging {
+    // text-align: left;
+
+    display: inline-flex;
+    justify-content: start;
+    flex-grow: 1;
+
+    @media (min-width: 768px) {
+      justify-content: end;
+    }
+
+    .pagination {
+      margin-bottom: 0;
+    }
+  }
+}
