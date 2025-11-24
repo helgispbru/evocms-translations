@@ -24,11 +24,11 @@ library.add(faChevronLeft, faChevronRight)
 
 const isTabFirst = computed(() => {
   const found = tabs.value.find((element) => element.active)
-  return found.to == route.path
+  return !found || found.to === route.path
 })
 const isTabLast = computed(() => {
   const found = tabs.value.findLast((element) => element.active)
-  return found.to == route.path
+  return !found || found.to === route.path
 })
 
 function onClickPrev() {
@@ -36,20 +36,24 @@ function onClickPrev() {
     return
   }
 
-  const current = tabs.value.findIndex((element) => element.to == route.path)
+  const current = tabs.value.findIndex((element) => element.to === route.path)
   const prev = tabs.value.slice(0, current).findLast((element) => element.active)
 
-  router.push({ path: prev.to })
+  if (prev) {
+    router.push({ path: prev.to })
+  }
 }
 function onClickNext() {
   if (isTabLast.value) {
     return
   }
 
-  const current = tabs.value.findIndex((element) => element.to == route.path)
+  const current = tabs.value.findIndex((element) => element.to === route.path)
   const next = tabs.value.slice(current + 1).find((element) => element.active)
 
-  router.push({ path: next.to })
+  if (next) {
+    router.push({ path: next.to })
+  }
 }
 </script>
 

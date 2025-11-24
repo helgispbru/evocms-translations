@@ -29,7 +29,7 @@ provide('locale', locale)
 import { setLocale as setLocaleVee } from '@vee-validate/i18n'
 
 import MenuActions from '@/components/menu-actions.vue'
-import navTabs from './components/nav-tabs.vue'
+import navTabs from '@/components/nav-tabs.vue'
 
 import BsModal from '@/components/service/bs-modal.vue'
 import BsConfirmation from '@/components/service/bs-confirmation.vue'
