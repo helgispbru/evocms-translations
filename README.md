@@ -42,3 +42,5 @@ php artisan vendor:publish --tag="assets" --force
 ## Описание
 
 Код фронта модуля находится в `publishable/module`, написан с помощью vuejs3.
+
+Для импорта и экспорта заимствован код у [WeDesignIt/laravel-translations-import](https://github.com/WeDesignIt/laravel-translations-import), спасибо ему!

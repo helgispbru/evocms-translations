@@ -2,6 +2,8 @@
 namespace Helgispbru\EvolutionCMS\Translations;
 
 use EvolutionCMS\ServiceProvider;
+use Helgispbru\EvolutionCMS\Translations\Console\Commands\TranslationsExport;
+use Helgispbru\EvolutionCMS\Translations\Console\Commands\TranslationsImport;
 
 class TranslationsServiceProvider extends ServiceProvider
 {
@@ -43,6 +45,17 @@ class TranslationsServiceProvider extends ServiceProvider
         // $this->publishes([
         // __DIR__ . '/../publishable/seeders' => EVO_CORE_PATH . 'database/seeders',
         // ], 'seeders');
+
+        // Register the commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                TranslationsImport::class,
+                TranslationsExport::class,
+                // TranslationsFind::class,
+                // TranslationsClean::class,
+                // TranslationsNuke::class
+            ]);
+        }
 
         // собранный фронт залить
         $this->publishes([
