@@ -2,7 +2,6 @@
 namespace Helgispbru\EvolutionCMS\Translations\Console\Commands;
 
 use Helgispbru\EvolutionCMS\Translations\Controllers\ImportExportController;
-// use WeDesignIt\LaravelTranslationsImport\Manager;
 use Illuminate\Console\Command;
 
 class TranslationsImport extends Command
@@ -19,13 +18,6 @@ class TranslationsImport extends Command
         { --only-groups=                : Only import given groups (split,by,commas), ex: admin/employer,frontend/* }
         { --o|overwrite                 : Whether the existing translations should be overwritten or not }
     ';
-
-/*
-        { --a|allow-vendor              : Whether to import vendor lang files or not }
-        { --j|allow-json                : Whether to import JSON lang files or not }
-*/
-
-    //  Potentially: Only supported locales? Config max locale length?
 
     /**
      * The console command description.
@@ -53,7 +45,7 @@ class TranslationsImport extends Command
     public function handle()
     {
         if ($this->option('overwrite')) {
-            if ($this->confirm('Are you really sure you want to overwrite all translations in the database ? This action cannot be undone.')) {
+            if ($this->confirm('Are you really sure you want to overwrite all translations in the database? This action cannot be undone.')) {
                 $this->overwrite = true;
             } else {
                 $this->overwrite = false;
@@ -63,8 +55,6 @@ class TranslationsImport extends Command
         // Set options from the command context
         $options = [
             'overwrite' => $this->overwrite,
-            // 'allow-vendor' => $this->option('allow-vendor'),
-            // 'allow-json' => $this->option('allow-json'),
             'ignore-locales' => $this->option('ignore-locales'),
             'ignore-groups' => $this->option('ignore-groups'),
             'only-groups' => $this->option('only-groups'),

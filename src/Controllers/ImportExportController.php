@@ -8,7 +8,6 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ImportExportController
@@ -21,6 +20,8 @@ class ImportExportController
         'warn' => "\033[33m%s\033[0m",
         'danger' => "\033[31m%s\033[0m",
     ];
+
+    const LANG = '/custom/lang';
 
     /** @var \Illuminate\Contracts\Foundation\Application */
     protected $app;
@@ -37,6 +38,11 @@ class ImportExportController
 
     /** @var array $options */
     protected $options;
+
+    /** @var array $languages */
+    protected $languages = [];
+    /** @var array $groups */
+    protected $groups = [];
 
     /**
      * Constructor.
@@ -89,16 +95,17 @@ class ImportExportController
     {
         $this->options = $options;
 
-        $base = $this->app['path'] . '/custom/lang';
+        // Где расположены файлы с языками
+        $base = $this->app['path'] . self::LANG;
 
         $counter = 0;
 
         $localeIds = Language::all()
             ->pluck('id');
 
-        // собрать папки с языками
+        // Собрать папки с языками
         foreach ($this->files->directories($base) as $langPath) {
-            // получить язык из пути
+            // Получить язык из пути
             $locale = basename($langPath);
 
             $localeId = Language::where('code', $locale)
@@ -116,11 +123,11 @@ class ImportExportController
                 //throw new Exception("Locale '{$locale}' not found");
             }
 
-            // если язык может быть импортирован и не в списке ignore-locales
+            // Если язык может быть импортирован и не в списке ignore-locales
             if ($this->localeCanBeImported($locale)) {
                 error_log(sprintf(self::LOGGING['info'], "Processing locale '{$locale}'"));
 
-                // Loop through all files in the locale
+                // Цикл по всем файлам в языке
                 foreach ($this->files->allfiles($langPath) as $file) {
                     $info = pathinfo($file);
                     $group = $info['filename'];
@@ -140,7 +147,7 @@ class ImportExportController
                         //throw new Exception("Group '{$group}' not found");
                     }
 
-                    // разобраться с разделителями
+                    // Разобраться с разделителями
                     $subLangPath = str_replace($langPath . DIRECTORY_SEPARATOR, '', $info['dirname']);
                     $subLangPath = str_replace(DIRECTORY_SEPARATOR, '/', $subLangPath);
                     $langPath = str_replace(DIRECTORY_SEPARATOR, '/', $langPath);
@@ -150,18 +157,18 @@ class ImportExportController
                     }
 
                     if ($this->groupCanBeProcessed($group)) {
-                        $translations = include $file;
+                        $entries = include $file;
 
-                        // по всем строкам переводов
-                        if ($translations && is_array($translations)) {
-                            // вложенные архивы в точки 'auth' => [ 'login' => 'Login', ] будет auth.login
-                            foreach (Arr::dot($translations) as $key => $value) {
+                        // Цикл по всем строкам переводов
+                        if ($entries && is_array($entries)) {
+                            // Вложенные архивы преобразовать в точки 'auth' => [ 'login' => 'Login', ] будет auth.login
+                            foreach (Arr::dot($entries) as $key => $value) {
                                 // импорт строк
                                 if ($this->importTranslation($key, $value, $localeId, $groupId) === true) {
                                     $counter++;
                                 }
 
-                                // другие языки для этого ключа, создать если нету
+                                // Другие языки для этого ключа, создать если нет
                                 foreach ($localeIds as $id) {
                                     $created = LanguageEntry::firstOrCreate(
                                         [
@@ -204,17 +211,17 @@ class ImportExportController
             return false;
         }
 
-        $translation = LanguageEntry::where('language_id', $localeId)
+        $entry = LanguageEntry::where('language_id', $localeId)
             ->where('language_group_id', $groupId)
             ->where('key', $key)
             ->first();
 
-        // если строка перевода есть
-        if ($translation) {
-            // разрешено замещать строки
+        // Если строка перевода есть
+        if ($entry) {
+            // Разрешено замещать строки
             if ($this->options['overwrite']) {
-                // обновить
-                $translation = LanguageEntry::where('language_id', $localeId)
+                // Обновить
+                $entry = LanguageEntry::where('language_id', $localeId)
                     ->where('language_group_id', $groupId)
                     ->where('key', $key)
                     ->update([
@@ -224,8 +231,8 @@ class ImportExportController
                 return true;
             }
         } else {
-            // добавить
-            $translation = LanguageEntry::create([
+            // Создать
+            $entry = LanguageEntry::create([
                 'language_id' => $localeId,
                 'language_group_id' => $groupId,
                 'key' => $key,
@@ -240,173 +247,150 @@ class ImportExportController
 
     ###########################################
     #
-    #   Export
+    #   Эспорт
     #
     ###########################################
 
     /**
-     * Process to export all translations.
+     * Выгрузка всех строк переводов.
      * @param $options
      */
     public function exportTranslations($options)
     {
-        // Set options
         $this->options = $options;
 
-        // Get all groups
-        $groupObjects = DB::table($this->databaseData['table'])
-            ->select('group')
-            ->groupBy('group')
-            ->get();
+        // Получить все языки
+        $this->languages = Language::all()
+            ->pluck('code', 'id');
 
-        foreach ($groupObjects as $groupObject) {
-            $group = $groupObject->group;
+        // Получить все группы
+        $this->groups = LanguageGroup::all()
+            ->pluck('code', 'id');
 
-            $vendor = false;
-            $json = false;
-            if (Str::startsWith($group, 'vendor')) {
-                $vendor = true;
-            } else if ($group == self::JSON_GROUP) {
-                $json = true;
-            }
-
-            // Process separately if it's a vendor group or JSON
-            if ($vendor) {
-                if ($this->options['allow-vendor']) {
-                    $vendorGroup = $group;
-                    // Get an array of each nesting
-                    $subfolders = explode(DIRECTORY_SEPARATOR, $group);
-                    // Set the actual group
-                    $group = implode(DIRECTORY_SEPARATOR, array_slice($subfolders, 2));
-
-                    $this->processExportForGroup($group, $vendorGroup);
-                }
-            } else if ($json) {
-                if ($this->options['allow-json']) {
-                    $this->processExportForGroup($group);
-                }
-            } else {
-                $this->processExportForGroup($group);
-            }
+        foreach ($this->groups as $groupId => $groupCode) {
+            $this->processExportForGroup($groupId);
         }
     }
 
     /**
-     * Processes the export of each group.
-     * @param $group
-     * @param null $vendorGroup
+     * Обработка экспорта для группы.
+     * @param $groupId
      */
-    public function processExportForGroup($group, $vendorGroup = null)
+    public function processExportForGroup($groupId)
     {
-        if ($this->groupCanBeProcessed($group)) {
-            // Get all translations by group
-            $translations = DB::table($this->databaseData['table'])
-                ->where($this->databaseData['groupColumn'], $vendorGroup ?? $group)
+        if ($this->groupCanBeProcessed($this->groups[$groupId])) {
+            error_log(sprintf(self::LOGGING['info'], "Exporting group '{$this->groups[$groupId]}'"));
+
+            // Получить переводы для группы
+            $entries = LanguageEntry::where('language_group_id', $groupId)
                 ->get();
 
-            // Make a tree for this group
-            $tree = $this->makeTree($translations);
+            // Сделать дерево для группы
+            $tree = $this->makeTree($entries);
 
-            $this->exportTranslationGroup($tree, $group, $vendorGroup);
+            $this->exportTranslationGroup($tree, $groupId);
         }
     }
 
     /**
-     * Converts the tree into valid lang files.
+     * Сохранить дерево в файлы.
      * @param $tree
-     * @param $group
-     * @param null $vendorGroup
+     * @param $groupId
      */
-    public function exportTranslationGroup($tree, $group, $vendorGroup = null)
+    public function exportTranslationGroup(&$tree, $groupId)
     {
-        $json = false;
-        if ($group == self::JSON_GROUP) {
-            $json = true;
-        }
+        $base = $this->app['path'] . self::LANG;
 
-        if (!$json) {
-            // Loop through all groups
-            foreach ($tree as $locale => $groups) {
-                // Only process if the current group is present
-                if (isset($groups[$vendorGroup ?? $group])) {
-                    // Get the translations for this group
-                    $translations = $groups[$vendorGroup ?? $group];
+        // По всем группам
+        foreach ($tree as $languageId => $groups) {
+            if (isset($groups[$groupId])) {
+                // Записи для текущей группы
+                $entries = $groups[$groupId];
 
-                    // Set the lang path
-                    $base = $this->app['path.lang'];
+                // Убрать внутренние массивы, где значение null
+                $filteredEntries = array_map([self::class, 'deepFilterNull'], $entries);
+                // Убрать строки, где значение null
+                $filteredEntries = array_filter($filteredEntries, fn($value) => $value !== null);
 
-                    // If the full group exists, and is a vendor group
-                    if (isset($vendorGroup) && Str::startsWith($vendorGroup, 'vendor')) {
-                        // Construct the proper path to the locale
-                        $vendorGroup = str_replace("/{$group}", '', $vendorGroup);
+                // Путь к языку из языка и группы
+                $localePath = $this->languages[$languageId] . DIRECTORY_SEPARATOR . $this->groups[$groupId];
 
-                        $localePath = $vendorGroup . DIRECTORY_SEPARATOR . $locale . DIRECTORY_SEPARATOR . $group;
-                    } else {
-                        // Define the localePath, based of locale and group
-                        $localePath = $locale . DIRECTORY_SEPARATOR . $group;
+                // Массив из соседей
+                $subfolders = explode(DIRECTORY_SEPARATOR, $localePath);
+                // Убрать последний элемент (это файл php)
+                array_pop($subfolders);
+
+                $subfolder_level = '';
+                // Цикл по подпапкам, чтобы проверить полный путь
+                foreach ($subfolders as $subfolder) {
+                    // Определить путь к текущей папке
+                    $subfolder_level = $subfolder_level . $subfolder . DIRECTORY_SEPARATOR;
+                    // Построить путь
+                    $temp_path = rtrim($base . DIRECTORY_SEPARATOR . $subfolder_level, DIRECTORY_SEPARATOR);
+
+                    // Если нет - создать
+                    if (!is_dir($temp_path)) {
+                        mkdir($temp_path, 0775, true);
                     }
-
-                    // Get an array of each nesting
-                    $subfolders = explode(DIRECTORY_SEPARATOR, $localePath);
-                    // Remove the last item (which is the actual .php file)
-                    array_pop($subfolders);
-
-                    $subfolder_level = '';
-                    // Loop through each subfolder to validate the full path
-                    foreach ($subfolders as $subfolder) {
-                        // Define the path to the current subfolder
-                        $subfolder_level = $subfolder_level . $subfolder . DIRECTORY_SEPARATOR;
-                        // Build a path
-                        $temp_path = rtrim($base . DIRECTORY_SEPARATOR . $subfolder_level, DIRECTORY_SEPARATOR);
-
-                        // If the directory doesn't exist, ensure to make it
-                        if (!is_dir($temp_path)) {
-                            mkdir($temp_path, 0775, true);
-                        }
-                    }
-                    // The path is now fully validated
-
-                    // Define the path of the
-                    $filePath = $base . DIRECTORY_SEPARATOR . $localePath . '.php';
-
-                    // Convert the translations into valid PHP code to be written to the file
-                    $output = "<?php\n\nreturn " . $this->fancyVarExport($translations) . ';' . \PHP_EOL;
-                    // Write the translations to the file
-                    $this->files->put($filePath, $output);
                 }
-            }
-        } else {
-            foreach ($tree as $locale => $groups) {
-                if (isset($groups[$group])) {
-                    $translations = $groups[$group];
-                    $filePath = $this->app['path.lang'] . '/' . $locale . '.json';
-                    $output = json_encode($translations, \JSON_PRETTY_PRINT  | \JSON_UNESCAPED_UNICODE);
-                    $this->files->put($filePath, $output);
-                }
+                // Теперь путь проверен
+
+                $filePath = $base . DIRECTORY_SEPARATOR . $localePath . '.php';
+
+                // Подготовить и записать в файл
+                $output = "<?php\n\nreturn " . $this->fancyVarExport($filteredEntries) . ';' . \PHP_EOL;
+                $this->files->put($filePath, $output);
+
+                // error_log(sprintf(self::LOGGING['info'], "Group '{$this->groups[$groupId]}' for '{$this->languages[$languageId]}' written"));
             }
         }
     }
 
     /**
-     * Build a nested tree array.
-     * @param object $translations
+     * Построить массив с деревом переводов.
+     * @param object $entries
      * @return array
      */
-    protected function makeTree($translations)
+    protected function makeTree($entries)
     {
         $array = [];
-        foreach ($translations as $translation) {
-            // Retrieve the translation values
-            $text = json_decode($translation->{$this->databaseData['translationColumn']}, true);
-            // Loop through all locales
-            foreach ($text as $locale => $value) {
-                // Build a tree nested array, shaped as locale => groups => keys => value
-                Arr::set($array[$locale][$translation->{$this->databaseData['groupColumn']}],
-                    $translation->{$this->databaseData['keyColumn']}, $value);
-            }
+
+        foreach ($entries as $entry) {
+            $languageId = $entry->language_id;
+            $groupId = $entry->language_group_id;
+
+            // Построить массив вида locale => groups => keys => value
+            Arr::set(
+                $array[$languageId][$groupId],
+                $entry->key,
+                $entry->value
+            );
         }
 
         return $array;
+    }
+
+    /**
+     * Убрать внутренние строки где значение null.
+     * @param string|array $value
+     * @return
+     */
+    private static function deepFilterNull($value)
+    {
+        if (is_array($value)) {
+            $result = [];
+
+            foreach ($value as $key => $item) {
+                $filtered = self::deepFilterNull($item);
+
+                if ($filtered !== null) {
+                    $result[$key] = $filtered;
+                }
+            }
+            return empty($result) ? null : $result;
+        }
+
+        return $value !== null ? $value : null;
     }
 
     ###########################################

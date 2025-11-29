@@ -2,7 +2,6 @@
 namespace Helgispbru\EvolutionCMS\Translations\Console\Commands;
 
 use Helgispbru\EvolutionCMS\Translations\Controllers\ImportExportController;
-// use WeDesignIt\LaravelTranslationsImport\Manager;
 use Illuminate\Console\Command;
 
 class TranslationsExport extends Command
@@ -16,12 +15,7 @@ class TranslationsExport extends Command
 
         { --ignore-groups=              : Groups that should not be imported (split,by,commas), ex: --ignore-groups=routes,admin/non-editable-stuff }
         { --only-groups=                : Only export given groups (split,by,commas), ex: admin/employer,frontend/* }
-        ';
-
-    /*
-		{ --a|allow-vendor              : Whether to export to vendor lang files or not }
-        { --j|allow-json                : Whether to export to JSON lang files or not }
-		 */
+    ';
 
     /**
      * The console command description.
@@ -54,8 +48,6 @@ class TranslationsExport extends Command
         if ($this->confirm($error)) {
             // Set options from the command context
             $options = [
-                // 'allow-vendor' => $this->option('allow-vendor'),
-                // 'allow-json' => $this->option('allow-json'),
                 'ignore-groups' => $this->option('ignore-groups'),
                 'only-groups' => $this->option('only-groups'),
             ];
