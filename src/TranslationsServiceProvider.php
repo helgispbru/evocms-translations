@@ -52,8 +52,6 @@ class TranslationsServiceProvider extends ServiceProvider
             $this->commands([
                 TranslationsImport::class,
                 TranslationsExport::class,
-                // TranslationsFind::class,
-                // TranslationsClean::class,
                 TranslationsNuke::class,
             ]);
         }
