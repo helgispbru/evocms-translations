@@ -239,6 +239,43 @@ class ImportExportController
         $this->groups = LanguageGroup::all()
             ->pluck('code', 'id');
 
+        $base = $this->app['path'] . self::LANG;
+        $languageFolders = glob($base . '/*', GLOB_ONLYDIR);
+        $languageNames = $this->languages->values()->toArray();
+        $groupNames = $this->groups->values()->toArray();
+
+        // Удалить языки, которых уже нет
+        foreach ($languageFolders as $folder) {
+            $folderName = basename($folder);
+
+            if (!in_array($folderName, $languageNames)) {
+                // Если папки языка нет в списке, то удалить папку
+                self::deleteFolder($folder);
+
+                error_log(sprintf(self::LOGGING['info'], "Deleted language '{$folderName}'"));
+            } else {
+                // Если папка языка есть в списке, то проверить группы
+                $groupFiles = glob($base . '/' . $folderName . '/*.php');
+
+                // Удалить группы, которых уже нет
+                foreach ($groupFiles as $filePath) {
+                    $fileName = basename($filePath, '.php');
+
+                    if (!in_array($fileName, $groupNames)) {
+                        unlink($filePath);
+
+                        $tmp = $filePath;
+                        if (strpos($filePath, $base) === 0) {
+                            $tmp = substr($filePath, strlen($base));
+                        }
+
+                        error_log(sprintf(self::LOGGING['info'], "Deleted file '{$tmp}'"));
+                    }
+                }
+            }
+        }
+
+        // Выгрузить группы
         foreach ($this->groups as $groupId => $groupCode) {
             $this->processExportForGroup($groupId);
         }
@@ -342,12 +379,37 @@ class ImportExportController
         return $array;
     }
 
+    /**
+     * Удалить папку
+     * @param string
+     */
+    private static function deleteFolder($dir)
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $files = array_diff(scandir($dir), ['.', '..']);
+
+        foreach ($files as $file) {
+            $filePath = $dir . '/' . $file;
+            is_dir($filePath) ? self::deleteFolder($filePath) : unlink($filePath);
+        }
+
+        rmdir($dir);
+    }
+
     ###########################################
     #
     #   Удалить
     #
     ###########################################
 
+    /**
+     * Удалить записи переводов в базе.
+     * @param array $options
+     * @return boolean
+     */
     public function deleteTranslations($options = [])
     {
         if (empty($options['only-groups'])) {
