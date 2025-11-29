@@ -4,6 +4,7 @@ namespace Helgispbru\EvolutionCMS\Translations;
 use EvolutionCMS\ServiceProvider;
 use Helgispbru\EvolutionCMS\Translations\Console\Commands\TranslationsExport;
 use Helgispbru\EvolutionCMS\Translations\Console\Commands\TranslationsImport;
+use Helgispbru\EvolutionCMS\Translations\Console\Commands\TranslationsNuke;
 
 class TranslationsServiceProvider extends ServiceProvider
 {
@@ -53,7 +54,7 @@ class TranslationsServiceProvider extends ServiceProvider
                 TranslationsExport::class,
                 // TranslationsFind::class,
                 // TranslationsClean::class,
-                // TranslationsNuke::class
+                TranslationsNuke::class,
             ]);
         }
 

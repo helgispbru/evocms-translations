@@ -370,29 +370,6 @@ class ImportExportController
         return $array;
     }
 
-    /**
-     * Убрать внутренние строки где значение null.
-     * @param string|array $value
-     * @return
-     */
-    private static function deepFilterNull($value)
-    {
-        if (is_array($value)) {
-            $result = [];
-
-            foreach ($value as $key => $item) {
-                $filtered = self::deepFilterNull($item);
-
-                if ($filtered !== null) {
-                    $result[$key] = $filtered;
-                }
-            }
-            return empty($result) ? null : $result;
-        }
-
-        return $value !== null ? $value : null;
-    }
-
     ###########################################
     #
     #   Find
@@ -648,32 +625,40 @@ class ImportExportController
 
     ###########################################
     #
-    #   Nuke
+    #   Удалить
     #
     ###########################################
-    /*
+
     public function deleteTranslations($options = [])
     {
-        $query = DB::table($this->databaseData['table']);
+        if (empty($options['only-groups'])) {
+            $deleted = LanguageEntry::query()->delete();
 
-        if (!empty($options['only-groups'])) {
-            $groups = explode(',', $options['only-groups']);
-
-            $query->where(function ($q) use ($groups) {
-                foreach ($groups as $group) {
-                    if (Str::endsWith($group, '/*')) {
-                        $group = str_replace('*', '%', $group);
-                        $q->orWhere($this->databaseData['groupColumn'], 'like', $group);
-                    } else {
-                        $q->orWhere($this->databaseData['groupColumn'], $group);
-                    }
-                }
-            });
+            error_log(sprintf(self::LOGGING['info'], "Deleted {$deleted} entries."));
+            return true;
         }
 
-        $query->delete();
+        $counter = 0;
+        $groups = explode(',', $options['only-groups']);
+
+        foreach ($groups as $group) {
+            if (Str::endsWith($group, '/*')) {
+                $group = str_replace('*', '%', $group);
+                $deletedCount = LanguageEntry::whereHas('languageGroup', function ($query) use ($group) {
+                    $query->where('code', 'like', $group);
+                })->delete();
+            } else {
+                $deletedCount = LanguageEntry::whereHas('languageGroup', function ($query) use ($group) {
+                    $query->where('code', $group);
+                })->delete();
+            }
+
+            $counter += $deletedCount;
+        }
+
+        error_log(sprintf(self::LOGGING['info'], "Deleted {$counter} entries."));
+        return true;
     }
-    */
 
     ###########################################
     #
@@ -776,5 +761,28 @@ class ImportExportController
         );
 
         return $export;
+    }
+
+    /**
+     * Убрать внутренние строки где значение null.
+     * @param string|array $value
+     * @return
+     */
+    private static function deepFilterNull($value)
+    {
+        if (is_array($value)) {
+            $result = [];
+
+            foreach ($value as $key => $item) {
+                $filtered = self::deepFilterNull($item);
+
+                if ($filtered !== null) {
+                    $result[$key] = $filtered;
+                }
+            }
+            return empty($result) ? null : $result;
+        }
+
+        return $value !== null ? $value : null;
     }
 }
