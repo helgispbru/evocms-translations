@@ -100,7 +100,7 @@ class ImportExportController
                 error_log(sprintf(self::LOGGING['info'], "Processing locale '{$locale}'"));
 
                 // Цикл по всем файлам в языке
-                foreach ($this->files->allfiles($langPath) as $file) {
+                foreach ($this->files->allFiles($langPath) as $file) {
                     $info = pathinfo($file);
                     $group = $info['filename'];
 
@@ -231,6 +231,9 @@ class ImportExportController
     {
         $this->options = $options;
 
+        // Где расположены файлы с языками
+        $base = $this->app['path'] . self::LANG;
+
         // Получить все языки
         $this->languages = Language::all()
             ->pluck('code', 'id');
@@ -239,37 +242,31 @@ class ImportExportController
         $this->groups = LanguageGroup::all()
             ->pluck('code', 'id');
 
-        $base = $this->app['path'] . self::LANG;
-        $languageFolders = glob($base . '/*', GLOB_ONLYDIR);
+        $languageFolders = $this->files->directories($base);
         $languageNames = $this->languages->values()->toArray();
         $groupNames = $this->groups->values()->toArray();
 
         // Удалить языки, которых уже нет
-        foreach ($languageFolders as $folder) {
-            $folderName = basename($folder);
+        foreach ($languageFolders as $langPath) {
+            $folderName = basename($langPath);
 
             if (!in_array($folderName, $languageNames)) {
                 // Если папки языка нет в списке, то удалить папку
-                self::deleteFolder($folder);
+                $this->files->deleteDirectory($langPath);
 
                 error_log(sprintf(self::LOGGING['info'], "Deleted language '{$folderName}'"));
             } else {
                 // Если папка языка есть в списке, то проверить группы
-                $groupFiles = glob($base . '/' . $folderName . '/*.php');
+                $groupFiles = $this->files->allFiles($base . '/' . $folderName);
 
                 // Удалить группы, которых уже нет
                 foreach ($groupFiles as $filePath) {
                     $fileName = basename($filePath, '.php');
 
                     if (!in_array($fileName, $groupNames)) {
-                        unlink($filePath);
+                        $this->files->delete($filePath);
 
-                        $tmp = $filePath;
-                        if (strpos($filePath, $base) === 0) {
-                            $tmp = substr($filePath, strlen($base));
-                        }
-
-                        error_log(sprintf(self::LOGGING['info'], "Deleted file '{$tmp}'"));
+                        error_log(sprintf(self::LOGGING['info'], "Deleted file '{$fileName}'"));
                     }
                 }
             }
@@ -377,26 +374,6 @@ class ImportExportController
         }
 
         return $array;
-    }
-
-    /**
-     * Удалить папку
-     * @param string
-     */
-    private static function deleteFolder($dir)
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-
-        $files = array_diff(scandir($dir), ['.', '..']);
-
-        foreach ($files as $file) {
-            $filePath = $dir . '/' . $file;
-            is_dir($filePath) ? self::deleteFolder($filePath) : unlink($filePath);
-        }
-
-        rmdir($dir);
     }
 
     ###########################################

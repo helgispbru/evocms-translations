@@ -36,8 +36,8 @@ import BsConfirmation from '@/components/service/bs-confirmation.vue'
 import { useBsConfirmation } from '@/composable/useBsConfirmation'
 const { dialogState, confirm, cancel } = useBsConfirmation()
 
-import { useToast } from 'vue-toast-notification'
 import { TOAST_OPTIONS } from '@/constants/toasts'
+import { useToast } from 'vue-toast-notification'
 const $toast = useToast()
 
 import { onAddEntry, onAddGroup, onAddLang } from '@/composable/useBsModal'

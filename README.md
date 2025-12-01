@@ -11,7 +11,7 @@
 Зайти в консоль сервера, перейти в папку `core` и там выполнить:
 
 ```shell
-php -d="memory_limit=-1" artisan package:installrequire helgispbru/evocms-translations "*"
+php -d="memory_limit=-1" artisan package:installrequire helgispbru/EvolutionCMS-translations "*"
 
 php artisan vendor:publish --tag="assets" --force
 ```
@@ -24,7 +24,7 @@ php artisan vendor:publish --tag="assets" --force
 "repositories": [
     {
         "type": "git",
-        "url": "https://github.com/helgispbru/evocms-translations"
+        "url": "https://github.com/helgispbru/EvolutionCMS-translations"
     }
 ]
 ```
@@ -32,7 +32,7 @@ php artisan vendor:publish --tag="assets" --force
 2. Зайти в консоль сервера, перейти в папку `core` и там запустить
 
 ```bash
-php -d="memory_limit=-1" artisan package:installrequire helgispbru/evocms-translations "*"
+php -d="memory_limit=-1" artisan package:installrequire helgispbru/EvolutionCMS-translations "*"
 
 ; установка только фронта в assets
 php artisan vendor:publish --tag="assets" --force
@@ -43,13 +43,13 @@ php artisan vendor:publish --tag="assets" --force
 
 ## Использование
 
-Что при импорте
+Что при импорте?
 
-что при экспорте
+что при экспорте?
 
 ### Модуль
 
-Модуль доступен в админке EvoCMS и позволяет работать с переводами.
+Модуль доступен в админке EvolutionCMS и позволяет работать с переводами.
 
 После запуска модуля, **перед** началом работы, нужно сделать импорт языковых строк с помощью функции импорта (кнопка доступна в меню справа сверху).
 
@@ -57,11 +57,11 @@ php artisan vendor:publish --tag="assets" --force
 
 ### Консоль
 
-Функции импорта, экспорта и очистки таблиц базы доступны также из консоли. Консольные команды запускаются из папке `core`.
+Функции импорта, экспорта и очистки таблиц базы также доступны из консоли. Консольные команды запускаются из папке `core` на сервере.
 
 #### Импорт данных в базу
 
-При импорте в базе создаются записи для языков, групп и строк переводов. Существующие записи обновляются, данные из файлов имеют приоритет. Данные, которые были базе, но отсутствовали в файлах, не удаляются.
+При импорте в базе создаются записи для языков, групп и строк переводов. Существующие записи обновляются, данные из файлов имеют приоритет. Данные, которые были в базе, но отсутствовали в файлах, не удаляются.
 
 Команда:
 
@@ -113,6 +113,6 @@ php artisan translations:nuke
 
 ## Как устроено и благодарности
 
-Код фронта модуля находится в `publishable/module`, написан с помощью vuejs3.
+Исходный код фронта модуля находится в `publishable/module`, написан с помощью vuejs3.
 
 Для импорта и экспорта частично заимствован код у [WeDesignIt/laravel-translations-import](https://github.com/WeDesignIt/laravel-translations-import), спасибо ему!

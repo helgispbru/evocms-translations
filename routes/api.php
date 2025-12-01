@@ -23,9 +23,9 @@ Route::group([
             ],
         ], function () {
             // загрузить из файлов (импорт в базу)
-            Route::get('import', [TranslationsController::class, 'importToDB'])->name('languages.todb');
+            Route::get('import', [TranslationsController::class, 'importEntries'])->name('entries.import');
             // выгрузить в файлы (экспорт из базы)
-            Route::get('export', [TranslationsController::class, 'exportToFiles'])->name('languages.tofiles');
+            Route::get('export', [TranslationsController::class, 'exportEntries'])->name('entries.export');
 
             // -- языки
             Route::group([
