@@ -1,6 +1,6 @@
 {
   "name": "evocms-translations",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,7 +20,9 @@
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@vee-validate/i18n": "^4.15.1",
     "@vee-validate/rules": "^4.15.1",
+    "mitt": "^3.0.1",
     "pinia": "^3.0.1",
+    "tabulator-tables": "^6.3.1",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.13",
     "vue-i18n": "^11.1.10",

@@ -15,25 +15,107 @@ trait TranslationsLanguageClass
 {
     private function rulesLanguage(Request $request, $ignoreId = null): array
     {
-        $code_rules = ['required', 'max:2'];
+        $keys = array_keys($request->all());
+        $rules = [];
 
-        if ($ignoreId) {
-            // обновить
-            $code_rules[] = Rule::unique('languages', 'code')
-                ->ignore($ignoreId, 'id');
-        } else {
-            // создать
-            $code_rules[] = 'unique:languages,code';
+        foreach ($keys as $key) {
+            switch ($key) {
+                // language title
+                case 'title':
+                    $rules['title'] = 'required_without_all:code,required|max:20';
+                    break;
+
+                // language code
+                case 'code':
+                    $rules['code'] = ['required_without_all:title', 'required', 'max:2'];
+                    if ($ignoreId) {
+                        // обновить
+                        $rules['code'][] = Rule::unique('languages', 'code')
+                            ->ignore($ignoreId, 'id');
+                    } else {
+                        // создать
+                        $rules['code'][] = 'unique:languages,code';
+                    }
+                    break;
+            }
         }
 
-        return [
-            'code' => $code_rules,
-            'title' => 'required|max:20',
-        ];
+        return $rules;
     }
 
     // список языков
     public function getLanguages(Request $request)
+    {
+        // страницы
+        // $onpage = 10; // default
+        $onpage = (int) $request->input('size', 10);
+
+        $values = new Language();
+
+        // общее количество
+        // $count = $values->count();
+
+        $req = $request->all();
+
+        // фильтр
+        if (isset($req['search']['value']) && !empty($req['search']['value'])) {
+            $values = $values->where('code', 'like', $req['search']['value'] . '%')
+                ->orWhere('title', 'like', $req['search']['value'] . '%');
+        }
+
+        // сколько отфильтровано
+        // $filtered = $values->count();
+        // $pages = ceil($filtered / $onpage);
+
+        // сортировка (только по 1 параметру)
+        if (isset($req['sort'])) {
+            $values = $values->orderBy($req['sort'][0]['field'], $req['sort'][0]['dir']);
+        }
+
+        // $page = (int) ($req['page'] ?? 1);
+        // $size = (int) ($req['size'] ?? $onpage);
+
+        // $values = $values
+        // ->skip(($page - 1) * $size)
+        // ->take($size);
+
+        // $values = $values->get();
+        $paginator = $values->paginate($onpage);
+
+        evo()->logEvent(999, 1, '<pre>' . print_r($paginator->items(), true) . '</pre>', 'items');
+
+        return response($paginator);
+
+        // add extra
+        /*
+         return JsonResource::collection($paginator)->additional([
+            'extra' => [
+                'access' => self::getAccess(),
+                'avitoshops' => self::getAvitoShops(),
+            ],
+            ]);
+        */
+        /*
+        return response([
+            'data' => $values->toArray(),
+            'last_page' => $pages, // номер последней страницы
+        ]);
+        */
+        /*
+        return response([
+            'draw' => (int) $request->input('draw'),
+            'recordsTotal' => $count, // всего
+            'recordsFiltered' => $filtered, // отфильтровано
+            'data' => $values->toArray(),
+            'timestamp' => Carbon::now()->toISOString(),
+        ]);
+        */
+    }
+
+    // старая версия для data tables
+    /*
+    // список языков
+    public function getLanguagesDatatables(Request $request)
     {
         $values = new Language();
 
@@ -84,6 +166,7 @@ trait TranslationsLanguageClass
             'timestamp' => Carbon::now()->toISOString(),
         ]);
     }
+    */
 
     // создать язык
     public function createLanguage(Request $request)
@@ -99,34 +182,102 @@ trait TranslationsLanguageClass
                     'error' => __('evocms-translations::language.error_create'),
                     'errors' => $validator->errors(),
                     'timestamp' => Carbon::now()->toISOString(),
-                ], 400);
+                ], 422); // Unprocessable Entity
         }
 
         $validated = $validator->validated();
 
         // 1) добавить язык
         try {
-            $language = Language::create([
-                'code' => $validated['code'],
-                'title' => $validated['title'],
-            ]);
+            $language = Language::create($validated);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => __('evocms-translations::language.error_create'),
                 'timestamp' => Carbon::now()->toISOString(),
-            ], 400);
+            ], 500); // internal error
         }
 
         // 2) добавить строки для языка
         $added = LanguageEntry::createEntriesForNewLanguage($language->id);
 
         return response([
-            'created' => true,
+            'id' => $language->id,
             'added' => $added,
             'timestamp' => Carbon::now()->toISOString(),
         ]);
     }
 
+    // удалить язык
+    public function deleteLanguage(Request $request, $language_id)
+    {
+        // проверка существования $language_id в middleware ExistsLanguage
+
+        // 1) удалить строки с языком
+        try {
+            $deleted = LanguageEntry::where('language_id', $language_id)
+                ->delete();
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => __('evocms-translations::language.error_delete'),
+                'timestamp' => Carbon::now()->toISOString(),
+            ], 500); // internal error
+        }
+
+        // 2) удалить сам язык
+        try {
+            $deleted = Language::where('id', $language_id)
+                ->delete();
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => __('evocms-translations::language.error_delete'),
+                'timestamp' => Carbon::now()->toISOString(),
+            ], 500); // internal error
+        }
+
+        return response([
+            'deleted' => $deleted,
+            'timestamp' => Carbon::now()->toISOString(),
+        ]);
+    }
+
+    // изменение одного поля в строке языка
+    public function patchLanguage(Request $request, $language_id)
+    {
+        // проверка существования $language_id в middleware ExistsLanguage
+
+        $data = $request->only('code', 'title');
+        $data['code'] = Str::slug($data['code'], '_');
+
+        $validator = Validator::make($data, $this->rulesLanguage($request, $language_id));
+
+        if ($validator->fails()) {
+            return response()
+                ->json([
+                    'error' => __('evocms-translations::language.error_update'),
+                    'errors' => $validator->errors(),
+                    'timestamp' => Carbon::now()->toISOString(),
+                ], 422); // Unprocessable Entity
+        }
+
+        $validated = $validator->validated();
+
+        try {
+            $updated = Language::where('id', $language_id)
+                ->update($validated);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => __('evocms-translations::language.error_update'),
+                'timestamp' => Carbon::now()->toISOString(),
+            ], 500); // internal error
+        }
+
+        return response([
+            'updated' => $updated,
+            'timestamp' => Carbon::now()->toISOString(),
+        ]);
+    }
+
+    /*
     // получить язык
     public function getLanguage(Request $request, $language_id)
     {
@@ -137,7 +288,9 @@ trait TranslationsLanguageClass
             'timestamp' => Carbon::now()->toISOString(),
         ]);
     }
+        */
 
+    /*
     // обновить язык
     public function updateLanguage(Request $request, $language_id)
     {
@@ -177,7 +330,9 @@ trait TranslationsLanguageClass
             'timestamp' => Carbon::now()->toISOString(),
         ]);
     }
+        */
 
+    /*
     // удалить язык
     public function deleteLanguage(Request $request, $language_id)
     {
@@ -210,4 +365,5 @@ trait TranslationsLanguageClass
             'timestamp' => Carbon::now()->toISOString(),
         ]);
     }
+        */
 }

@@ -1,43 +1,44 @@
+/* пример структуры кнопок
+{
+  type: 'secondary', // цвет кнопки из bootstrap
+  items: [
+    // кнопка
+    {
+      action: 'add:entry', // действие кнопки
+      title: '', // текст кнопки - заполнится из vue-i18n
+      code: 'actions.addentry', // код текста кнопки для vue-i18n
+      icon: 'file-lines', // иконка fontawesome 6
+    },
+    // разделитель
+    {
+      action: null, // маркер разделителя
+    },
+  ],
+}
+*/
+
 export const ACTIONS = [
-  /* пример структуры кнопок
-  {
-    type: 'secondary', // цвет кнопки из bootstrap
-    items: [
-      // кнопка
-      {
-        title: '', // текст кнопки (будет загружен из языкового файла)
-        code: 'actions.addentry', // код текста кнопки
-        icon: 'file-lines', // иконка fontawesome 6
-        action: 'add:entry', // действие кнопки
-      },
-      // разделитель
-      {
-        action: null, // маркер разделителя
-      },
-    ],
-  }
-  */
   // добавить
   {
     type: 'success',
     items: [
       {
-        title: '',
+        action: 'add:entry',
+        title: '', // заполнится из vue-i18n
         code: 'actions.addentry',
         icon: 'file-lines',
-        action: 'add:entry',
       },
       {
-        title: '',
+        action: 'add:group',
+        title: '', // заполнится из vue-i18n
         code: 'actions.addgroup',
         icon: 'layer-group',
-        action: 'add:group',
       },
       {
-        title: '',
-        code: 'actions.addlang',
+        action: 'add:language',
+        title: '', // заполнится из vue-i18n
+        code: 'actions.addlanguage',
         icon: 'language',
-        action: 'add:lang',
       },
     ],
   },
@@ -46,16 +47,16 @@ export const ACTIONS = [
     type: 'secondary',
     items: [
       {
-        title: '',
+        action: 'db:import',
+        title: '', // заполнится из vue-i18n
         code: 'actions.fileimport',
         icon: 'file-import',
-        action: 'db:import',
       },
       {
-        title: '',
+        action: 'db:export',
+        title: '', // заполнится из vue-i18n
         code: 'actions.fileexport',
         icon: 'file-export',
-        action: 'db:export',
       },
     ],
   },

@@ -43,12 +43,16 @@ Route::group([
                     ],
                     'where' => ['language_id' => '[0-9]+'],
                 ], function () {
-                    // получить язык
-                    Route::get('/', [TranslationsController::class, 'getLanguage'])->name('languages.get');
-                    // обновить язык
-                    Route::put('/', [TranslationsController::class, 'updateLanguage'])->name('languages.update');
+                    // изменение одного поля
+                    Route::patch('/', [TranslationsController::class, 'patchLanguage'])->name('languages.patch');
                     // удалить язык
                     Route::delete('/', [TranslationsController::class, 'deleteLanguage'])->name('languages.delete');
+
+                    // было для datatables
+                    // получить язык
+                    // Route::get('/', [TranslationsController::class, 'getLanguage'])->name('languages.get');
+                    // обновить язык
+                    // Route::put('/', [TranslationsController::class, 'updateLanguage'])->name('languages.update');
                 });
             });
 

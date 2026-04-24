@@ -43,6 +43,9 @@ class TranslationsExport extends Command
      */
     public function handle()
     {
+        // не работает в laravel 8
+        // $this->withoutOverlapping();
+
         $error = 'Are you really sure you want to export translations from the database to the lang files?' . PHP_EOL . ' Existing translations will be overwritten, and translations that have not been imported will be lost.';
 
         if ($this->confirm($error)) {

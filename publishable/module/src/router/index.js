@@ -1,26 +1,26 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const router = createRouter({
-  history: createWebHistory(), // import.meta.env.BASE_URL
+  history: createWebHashHistory(), // import.meta.env.BASE_URL
   routes: [
-    { path: '/', redirect: { name: 'languages' } },
+    { path: '/', redirect: { name: 'language' } },
     { // так как модуль по умолчанию запускается с таким адресом
       path: '/manager/index.php',
-      redirect: { name: 'languages' },
+      redirect: { name: 'language' },
     },
     {
-      path: '/languages',
-      name: 'languages',
+      path: '/language',
+      name: 'language',
       component: () => import('@/views/PageLanguages.vue'),
     },
     {
-      path: '/groups',
-      name: 'groups',
+      path: '/group',
+      name: 'group',
       component: () => import('@/views/PageGroups.vue'),
     },
     {
-      path: '/entries',
-      name: 'entries',
+      path: '/entry',
+      name: 'entry',
       component: () => import('@/views/PageEntries.vue'),
     },
   ],

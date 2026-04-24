@@ -37,6 +37,9 @@ class TranslationsNuke extends Command
      */
     public function handle()
     {
+        // не работает в laravel 8
+        // $this->withoutOverlapping();
+
         // Set options from the command context
         $options = [
             'only-groups' => $this->option('only-groups'),

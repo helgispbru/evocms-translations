@@ -6,14 +6,14 @@
 
 ### Автоматическая
 
-**ВАЖНО:** сейчас недоступно
-
-Зайти в консоль сервера, перейти в папку `core` и там выполнить:
+Зайти в консоль сервера, перейти в папку `core` для сайта и там выполнить:
 
 ```shell
 php -d="memory_limit=-1" artisan package:installrequire helgispbru/evocms-translations "*"
 
 php artisan vendor:publish --tag="assets" --force
+
+php artisan migrate --step
 ```
 
 ### Вручную
@@ -29,7 +29,7 @@ php artisan vendor:publish --tag="assets" --force
 ]
 ```
 
-2. Зайти в консоль сервера, перейти в папку `core` и там запустить
+2. Зайти в консоль сервера, перейти в папку `core` для сайта и там запустить
 
 ```bash
 php -d="memory_limit=-1" artisan package:installrequire helgispbru/evocms-translations "*"
@@ -39,6 +39,8 @@ php artisan vendor:publish --tag="assets" --force
 
 ; или
 ; php artisan vendor:publish --provider="Helgispbru\EvolutionCMS\Translations\TranslationsServiceProvider" --force
+
+php artisan migrate --step
 ```
 
 ## Использование

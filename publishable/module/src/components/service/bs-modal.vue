@@ -7,7 +7,7 @@ import { useModalStore } from '@/stores/modal'
 const modal = useModalStore()
 const { isOpen, view, actions, title, size } = storeToRefs(modal)
 
-const model = reactive({ action: '', data: null })
+let model = reactive({ action: '', data: null })
 
 function closeModal() {
   modal.close()

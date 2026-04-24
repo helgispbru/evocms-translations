@@ -1,5 +1,5 @@
 export default {
-  addlang: 'Add language',
+  addlanguage: 'Add language',
   addgroup: 'Add group',
   addentry: 'Add entry',
   fileimport: 'Import from files',

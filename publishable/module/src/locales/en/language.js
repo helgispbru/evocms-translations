@@ -4,12 +4,11 @@ export default {
   cols: {
     code: 'CODE',
     title: 'TITLE',
+    actions: 'ACTIONS',
   },
   modal: {
-    add: 'Add language',
-    edit: 'Edit language',
     delete: 'Delete language',
-    deletemsg: 'Confirm language deletion, all entries for this language will also be deleted.',
+    deletemsg: 'Confirm language deletion, all entries for this language will be deleted also.',
   },
   toast: {
     created: 'Language created',
@@ -20,8 +19,10 @@ export default {
     code: 'Code',
     title: 'Title',
     error: {
-      noid: 'No language ID',
-      noaction: 'No language action',
+      nocode: 'Code is required',
+      notitle: 'Title is required',
+      // noid: 'No language ID',
+      // noaction: 'No language action',
     }
   }
 }

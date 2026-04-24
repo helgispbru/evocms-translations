@@ -1,5 +1,5 @@
 export default {
-  addlang: 'Добавить язык',
+  addlanguage: 'Добавить язык',
   addgroup: 'Добавить группу',
   addentry: 'Добавить перевод',
   fileimport: 'Импорт из файлов',

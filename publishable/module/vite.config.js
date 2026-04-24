@@ -50,9 +50,9 @@ export default defineConfig(({ mode }) => {
 
     optimizeDeps: {
       include: [
-        'datatables.net',
-        'datatables.net-dt',
-        'datatables.net-bs5'
+        // 'datatables.net',
+        // 'datatables.net-dt',
+        // 'datatables.net-bs5'
       ]
     },
 

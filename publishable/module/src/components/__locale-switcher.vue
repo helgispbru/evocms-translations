@@ -5,7 +5,7 @@ import { loadLocaleMessages } from '@/i18n'
 import { LOCALES } from '@/constants/locales'
 
 const { locale } = useI18n()
-const currentLocale = ref(locale.value)
+let currentLocale = ref(locale.value)
 
 const changeLocale = async (event) => {
   const newLocale = event.target.value
