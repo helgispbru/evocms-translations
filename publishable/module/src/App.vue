@@ -13,9 +13,7 @@ import { LOCALES } from '@/constants/locales'
 import { ACTIONS } from '@/constants/actions'
 
 // таблицы
-import { useGroupsStore } from '@/stores/groups'
 import { useEntriesStore } from '@/stores/entries'
-const groupsStore = useGroupsStore()
 const entriesStore = useEntriesStore()
 
 // многоязычность приложения
@@ -41,7 +39,7 @@ import { TOAST_OPTIONS } from '@/constants/toasts'
 import { useToast } from 'vue-toast-notification'
 const $toast = useToast()
 
-import { onAddEntry, onAddGroup } from '@/composable/useBsModal'
+import { onAddEntry } from '@/composable/useBsModal'
 
 import { onImport, onExport } from '@/composable/useApiMethods'
 
@@ -103,17 +101,17 @@ async function onMenuClick(ev) {
   // импорт/экспорт в базу
   if (ev.startsWith('db:')) {
     switch (ev.replace('db:', '')) {
+      // импорт в базу
       case 'import':
-        // импорт в базу
         if (await onImport(t)) {
           $toast.success(t('actions.toast.imported'), TOAST_OPTIONS)
 
-          groupsStore.increaseTableKey()
           entriesStore.increaseTableKey()
         }
         break
+
+      // экспорт из базы
       case 'export':
-        // экспорт из базы
         if (await onExport(t)) {
           $toast.success(t('actions.toast.exported'), TOAST_OPTIONS)
         }
@@ -136,13 +134,20 @@ async function onMenuClick(ev) {
 
         emitter.emit('tabulator:language:add-row')
         break
+
       // добавить группу
       case 'group':
-        if (await onAddGroup(t)) {
-          $toast.success(t('groups.toast.created'), TOAST_OPTIONS)
-          groupsStore.increaseTableKey()
-        }
+        router.push({
+          path: ev.replace('add:', ''),
+          query: {
+            action: 'group:create',
+            timestamp: Date.now(),
+          },
+        })
+
+        emitter.emit('tabulator:group:add-row')
         break
+
       // добавить строку
       case 'entry':
         if (await onAddEntry(t)) {
@@ -241,5 +246,7 @@ watch(locale, (newVal, oldVal) => {
 </template>
 
 <style lang="scss">
-//
+.tab-content {
+  padding-bottom: calc(var(--bs-gutter-x) * 0.5);
+}
 </style>

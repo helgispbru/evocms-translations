@@ -47,12 +47,6 @@ Route::group([
                     Route::patch('/', [TranslationsController::class, 'patchLanguage'])->name('languages.patch');
                     // удалить язык
                     Route::delete('/', [TranslationsController::class, 'deleteLanguage'])->name('languages.delete');
-
-                    // было для datatables
-                    // получить язык
-                    // Route::get('/', [TranslationsController::class, 'getLanguage'])->name('languages.get');
-                    // обновить язык
-                    // Route::put('/', [TranslationsController::class, 'updateLanguage'])->name('languages.update');
                 });
             });
 
@@ -72,11 +66,9 @@ Route::group([
                     ],
                     'where' => ['group_id' => '[0-9]+'],
                 ], function () {
-                    // получить группу
-                    Route::get('/', [TranslationsController::class, 'getGroup'])->name('groups.get');
-                    // обновить группу
-                    Route::put('/', [TranslationsController::class, 'updateGroup'])->name('groups.update');
-                    // удалить группу
+                    // изменение одного поля
+                    Route::patch('/', [TranslationsController::class, 'patchGroup'])->name('groups.patch');
+                    // удалить язык
                     Route::delete('/', [TranslationsController::class, 'deleteGroup'])->name('groups.delete');
                 });
             });

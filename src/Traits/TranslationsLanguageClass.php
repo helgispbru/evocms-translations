@@ -22,12 +22,12 @@ trait TranslationsLanguageClass
             switch ($key) {
                 // language title
                 case 'title':
-                    $rules['title'] = 'required_without_all:code,required|max:20';
+                    $rules['title'] = 'required|max:20'; // required_without_all:code,
                     break;
 
                 // language code
                 case 'code':
-                    $rules['code'] = ['required_without_all:title', 'required', 'max:2'];
+                    $rules['code'] = ['required', 'max:2']; // 'required_without_all:title',
                     if ($ignoreId) {
                         // обновить
                         $rules['code'][] = Rule::unique('languages', 'code')
@@ -52,121 +52,24 @@ trait TranslationsLanguageClass
 
         $values = new Language();
 
-        // общее количество
-        // $count = $values->count();
-
         $req = $request->all();
 
+        // не реализовано
         // фильтр
         if (isset($req['search']['value']) && !empty($req['search']['value'])) {
             $values = $values->where('code', 'like', $req['search']['value'] . '%')
                 ->orWhere('title', 'like', $req['search']['value'] . '%');
         }
 
-        // сколько отфильтровано
-        // $filtered = $values->count();
-        // $pages = ceil($filtered / $onpage);
-
         // сортировка (только по 1 параметру)
         if (isset($req['sort'])) {
             $values = $values->orderBy($req['sort'][0]['field'], $req['sort'][0]['dir']);
         }
 
-        // $page = (int) ($req['page'] ?? 1);
-        // $size = (int) ($req['size'] ?? $onpage);
-
-        // $values = $values
-        // ->skip(($page - 1) * $size)
-        // ->take($size);
-
-        // $values = $values->get();
         $paginator = $values->paginate($onpage);
 
-        evo()->logEvent(999, 1, '<pre>' . print_r($paginator->items(), true) . '</pre>', 'items');
-
         return response($paginator);
-
-        // add extra
-        /*
-         return JsonResource::collection($paginator)->additional([
-            'extra' => [
-                'access' => self::getAccess(),
-                'avitoshops' => self::getAvitoShops(),
-            ],
-            ]);
-        */
-        /*
-        return response([
-            'data' => $values->toArray(),
-            'last_page' => $pages, // номер последней страницы
-        ]);
-        */
-        /*
-        return response([
-            'draw' => (int) $request->input('draw'),
-            'recordsTotal' => $count, // всего
-            'recordsFiltered' => $filtered, // отфильтровано
-            'data' => $values->toArray(),
-            'timestamp' => Carbon::now()->toISOString(),
-        ]);
-        */
     }
-
-    // старая версия для data tables
-    /*
-    // список языков
-    public function getLanguagesDatatables(Request $request)
-    {
-        $values = new Language();
-
-        // общее количество
-        $count = $values->count();
-
-        $req = $request->all();
-
-        // фильтр
-        if (isset($req['search']['value']) && !empty($req['search']['value'])) {
-            $values = $values->where('code', 'like', '%' . $req['search']['value'] . '%')
-                ->orWhere('title', 'like', '%' . $req['search']['value'] . '%');
-        }
-
-        // сколько отфильтровано
-        $filtered = $values->count();
-
-        // сортировка (только по 1 параметру)
-        if (isset($req['order'])) {
-            $col_id = $req['order'][0]['column'];
-            $field = $req['columns'][$col_id]['data'];
-
-            switch ($req['order'][0]['dir']) {
-                case 'asc':
-                    $values = $values->orderBy($field, 'asc');
-                    break;
-                case 'desc':
-                    $values = $values->orderBy($field, 'desc');
-                    break;
-            }
-        }
-
-        // страницы
-        if (isset($req['start'])) {
-            $values = $values->skip($req['start']);
-        }
-        if (isset($req['length'])) {
-            $values = $values->take($req['length']);
-        }
-
-        $values = $values->get();
-
-        return response([
-            'draw' => (int) $request->input('draw'),
-            'recordsTotal' => $count, // всего
-            'recordsFiltered' => $filtered, // отфильтровано
-            'data' => $values->toArray(),
-            'timestamp' => Carbon::now()->toISOString(),
-        ]);
-    }
-    */
 
     // создать язык
     public function createLanguage(Request $request)
@@ -276,94 +179,4 @@ trait TranslationsLanguageClass
             'timestamp' => Carbon::now()->toISOString(),
         ]);
     }
-
-    /*
-    // получить язык
-    public function getLanguage(Request $request, $language_id)
-    {
-        // проверка существования $language_id в middleware ExistsLanguage
-
-        return response([
-            'data' => Language::find($language_id),
-            'timestamp' => Carbon::now()->toISOString(),
-        ]);
-    }
-        */
-
-    /*
-    // обновить язык
-    public function updateLanguage(Request $request, $language_id)
-    {
-        // проверка существования $language_id в middleware ExistsLanguage
-
-        $data = $request->only('code', 'title');
-        $data['code'] = Str::slug($data['code'], '_');
-
-        $validator = Validator::make($data, $this->rulesLanguage($request, $language_id));
-
-        if ($validator->fails()) {
-            return response()
-                ->json([
-                    'error' => __('evocms-translations::language.error_update'),
-                    'errors' => $validator->errors(),
-                    'timestamp' => Carbon::now()->toISOString(),
-                ], 400);
-        }
-
-        $validated = $validator->validated();
-
-        try {
-            $updated = Language::where('id', $language_id)
-                ->update([
-                    'code' => $validated['code'],
-                    'title' => $validated['title'],
-                ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => __('evocms-translations::language.error_update'),
-                'timestamp' => Carbon::now()->toISOString(),
-            ], 400);
-        }
-
-        return response([
-            'updated' => $updated,
-            'timestamp' => Carbon::now()->toISOString(),
-        ]);
-    }
-        */
-
-    /*
-    // удалить язык
-    public function deleteLanguage(Request $request, $language_id)
-    {
-        // проверка существования $language_id в middleware ExistsLanguage
-
-        // 1) удалить строки с языком
-        try {
-            $deleted = LanguageEntry::where('language_id', $language_id)
-                ->delete();
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => __('evocms-translations::language.error_delete'),
-                'timestamp' => Carbon::now()->toISOString(),
-            ], 400);
-        }
-
-        // 2) удалить сам язык
-        try {
-            $deleted = Language::where('id', $language_id)
-                ->delete();
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => __('evocms-translations::language.error_delete'),
-                'timestamp' => Carbon::now()->toISOString(),
-            ], 400);
-        }
-
-        return response([
-            'deleted' => $deleted,
-            'timestamp' => Carbon::now()->toISOString(),
-        ]);
-    }
-        */
 }

@@ -1,5 +1,5 @@
 // создать язык
-export const createTabulatorLang = (t) => ({
+export const createTabulatorI18n = (t) => ({
   data: {
     loading: t('tabulator.data.loading'),
     error: t('tabulator.data.error'),
@@ -29,10 +29,10 @@ export const createTabulatorLang = (t) => ({
 })
 
 // обновить язык
-export const updateTabulatorLanguage = (tabulator, t, locale) => {
+export const updateTabulatorI18n = (tabulator, t, locale) => {
   if (!tabulator) return;
 
-  const langPack = createTabulatorLang(t);
+  const langPack = createTabulatorI18n(t);
 
   tabulator.modules.localize.installLang(locale, langPack);
   tabulator.setLocale(locale);

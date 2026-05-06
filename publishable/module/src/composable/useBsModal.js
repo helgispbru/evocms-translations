@@ -9,118 +9,6 @@ import { getLanguages, getGroups } from './useApiMethods'
 
 // --- group
 
-const onAddGroup = async (t) => {
-  const obj = {
-    action: 'add',
-    id: 0,
-    code: '',
-    title: '',
-  }
-
-  const modalStore = useModalStore()
-
-  modalStore.setTitle(t('groups.modal.add'))
-  modalStore.setSize('md')
-  modalStore.setData(obj)
-
-  const result = await modalStore.open(
-    defineAsyncComponent({
-      loader: () => import('@/components/modals/group.vue'),
-      // loadingComponent: LoadingProcess,
-      // delay: timeoutLoad, // default: 200ms
-      // errorComponent: LoadingError,
-      // timeout: timeoutError // default: infinity
-    }),
-    [
-      // actions
-    ]
-  )
-
-  return result?.saved ?? false
-}
-
-const onEditGroup = async (t, obj) => {
-  const modalStore = useModalStore()
-
-  modalStore.setTitle(t('groups.modal.edit'))
-  modalStore.setSize('md')
-  modalStore.setData(obj)
-
-  const result = await modalStore.open(
-    defineAsyncComponent({
-      loader: () => import('@/components/modals/group.vue'),
-      // loadingComponent: LoadingProcess,
-      // delay: timeoutLoad, // default: 200ms
-      // errorComponent: LoadingError,
-      // timeout: timeoutError // default: infinity
-    }),
-    [
-      // actions
-    ]
-  )
-
-  return result?.saved ?? false
-}
-
-const onDeleteGroup = async (t, obj, $toast) => {
-  const { show: dialogShow } = useBsConfirmation()
-
-  const ok = await dialogShow({
-    title: t('groups.modal.delete'),
-    message: t('groups.modal.deletemsg'),
-    okButton: t('btn.delete'),
-    cancelButton: t('btn.cancel'),
-  })
-
-  if (!ok) {
-    console.log('Not confirmed...')
-    return false
-  }
-
-  const url = `${URL_PATH}/groups/${obj.id}`
-
-  try {
-    const options = {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Authorization': 'Bearer your-token-here'
-      },
-      // body: JSON.stringify({}),
-      // mode: 'cors', // no-cors, *cors, same-origin
-      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-      // credentials: 'same-origin', // include, *same-origin, omit
-      // redirect: 'follow' // manual, *follow, error
-    }
-    const response = await fetch(url, options)
-    const data = await response.json()
-
-    if (!response.ok) {
-      const errorText = data?.error || `${response.status} ${response.statusText}`
-
-      // HTTP errors (404, 500, etc.)
-      const error = new Error(errorText)
-      error.status = response.status
-      // $toast.warning(`HTTP error! ${response.status} ${response.statusText}`, TOAST_OPTIONS)
-      throw error
-    }
-
-    return true
-  } catch (error) {
-    if (error.name === 'TypeError') {
-      // network errors (failed to fetch)
-      // console.error(t('toast.errornetwork'), error.message)
-      $toast.error(`${t('toast.errornetwork')} ${error.message}`, TOAST_OPTIONS)
-    } else {
-      // other errors
-      // console.error(t('toast.error'), error.message)
-      $toast.error(`${t('toast.error')} ${error.message}`, TOAST_OPTIONS)
-    }
-
-    throw error // Re-throw if you want calling code to handle it
-  }
-}
-
 // -- entry
 
 const onAddEntry = async (t) => {
@@ -338,7 +226,7 @@ export {
   // language
   //
   // group
-  onAddGroup, onEditGroup, onDeleteGroup,
+  //
   // entry
   onAddEntry, onEditValue, onDeleteValue, onEditKey, onDeleteKey,
 }

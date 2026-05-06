@@ -4,10 +4,9 @@ export default {
   cols: {
     code: 'CODE',
     title: 'TITLE',
+    actions: 'ACTIONS',
   },
   modal: {
-    add: 'Add group',
-    edit: 'Edit group',
     delete: 'Delete group',
     deletemsg: 'Confirm group deletion, all entries for this group will also be deleted.',
   },
@@ -20,8 +19,10 @@ export default {
     code: 'Code',
     title: 'Title',
     error: {
-      noid: 'No group ID',
-      noaction: 'No group action',
+      nocode: 'Code is required',
+      notitle: 'Title is required',
+      // noid: 'No group ID',
+      // noaction: 'No group action',
     }
   }
 }

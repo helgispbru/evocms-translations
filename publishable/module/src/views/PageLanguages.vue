@@ -8,29 +8,31 @@ const route = useRoute()
 const router = useRouter()
 
 import { URL_PATH } from '@/constants/settings'
-const url = ref(`${URL_PATH}/languages`)
+const path = 'languages'
+const url = ref(`${URL_PATH}/${path}`)
 
 import { useI18n } from 'vue-i18n'
 const { t, locale } = useI18n()
-
-import { useToast } from 'vue-toast-notification'
-import { TOAST_OPTIONS } from '@/constants/toasts'
-const $toast = useToast()
 
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 const table = ref(null)
 let tabulator = null
 
-import { createTabulatorLang, updateTabulatorLanguage } from '@/composable/tabulator-i18n'
+import { createTabulatorI18n, updateTabulatorI18n } from '@/composable/tabulator-i18n'
 import { actionFormatter } from '@/composable/tabulator-buttons'
-import { tabulatorAddRow, saveToBackend } from '@/composable/tabulator-methods'
+import {
+  tabulatorAddRow,
+  tabulatorRowFormatter,
+  tabulatorEventCellEditing,
+  tabulatorEventCellEditCancelled,
+  tabulatorEventCellEdited,
+} from '@/composable/tabulator-methods'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 // кнопки в таблице
 import { faSquarePlus } from '@fortawesome/free-solid-svg-icons'
 library.add(faSquarePlus)
-// faTrash, faXmark,
 
 const isAdding = ref(false)
 const onpage = ref(10) // сколько на странице
@@ -40,7 +42,7 @@ const columns = computed(() => [
   {
     title: t('language.cols.code'),
     field: 'code',
-    width: 75,
+    width: '15%',
     sorter: 'string',
     editor: 'input',
     validator: ['required', 'string', 'minLength:1', 'maxLength:2'],
@@ -59,6 +61,7 @@ const columns = computed(() => [
     formatter: actionFormatter,
     formatterParams: {
       t,
+      page: 'language',
     },
     headerSort: false,
   },
@@ -74,10 +77,10 @@ const initTabulator = () => {
 
   // языки для tabulator из vue-i18n
   const initialLang = {
-    [locale.value]: createTabulatorLang(t),
+    [locale.value]: createTabulatorI18n(t),
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let isResolved = false
 
     tabulator = new Tabulator(table.value, {
@@ -85,27 +88,21 @@ const initTabulator = () => {
       reactiveData: true,
       layout: 'fitColumns',
       sortMode: 'remote',
-      initialSort: [{ column: 'title', dir: 'asc' }],
+      initialSort: [{ column: 'code', dir: 'asc' }],
       pagination: true,
       paginationMode: 'remote',
-      paginationSize: onpage.value, // сколько на странице
+      paginationSize: onpage.value,
       columns: columns.value,
       locale: locale.value,
       langs: initialLang,
-      rowFormatter: function (row) {
-        if (row.getData()._isNew) {
-          row.getElement().classList.add('bg-warning')
-        } else {
-          row.getElement().classList.remove('bg-warning')
-        }
-      },
+      rowFormatter: tabulatorRowFormatter,
     })
 
     // данные загружены
     tabulator.on('dataLoaded', function (data) {
       if (!isResolved) {
         isResolved = true
-        resolve()
+        resolve(data)
       }
     })
 
@@ -117,110 +114,26 @@ const initTabulator = () => {
       }
     })
 
-    // ячейка отредактирована
-    tabulator.on('cellEdited', (cell) => {
-      let row = cell.getRow()
-      let rowData = cell.getRow().getData()
-      let rowId = rowData.id
-
-      let code = undefined
-      let title = undefined
-      const errors = []
-
-      if (rowData._isNew) {
-        // новая строка
-        switch (cell.getField()) {
-          case 'code':
-            code = cell.getValue().trim()
-            if (!code) {
-              errors.push(t('language.form.error.nocode'))
-            }
-            break
-          case 'title':
-            title = cell.getValue().trim()
-            if (!title) {
-              errors.push(t('language.form.error.notitle'))
-            }
-            break
-        }
-      } else {
-        // обновление строки
-        code = rowData?.code?.trim()
-        title = rowData?.title?.trim()
-
-        if (!code) {
-          errors.push(t('language.form.error.nocode'))
-        }
-        if (!title) {
-          errors.push(t('language.form.error.notitle'))
-        }
-      }
-
-      if (errors.length > 0) {
-        errors.forEach((el) => $toast.warning(el, TOAST_OPTIONS))
-        cell.restoreOldValue()
-        return false
-      }
-
-      let saveData = {}
-
-      // не сохранять для новых строк, которые еще не были нормально сохранены
-      if (rowData._isNew) {
-        code = rowData?.code?.trim()
-        title = rowData?.title?.trim()
-
-        if (code && title) {
-          // создать новую строку в таблице
-          saveData = Object.assign(saveData, {
-            code,
-            title,
-          })
-
-          // сохранить строку
-          saveToBackend(cell, saveData, url.value, 'POST')
-            .then((data) => {
-              row
-                .update({
-                  id: data.id, // новый id
-                  _isNew: false,
-                })
-                .then(() => {
-                  row.reformat()
-                })
-
-              $toast.success(t('language.toast.created'), TOAST_OPTIONS)
-              isAdding.value = false
-            })
-            .catch((error) => {
-              // показать ошибки?
-              console.error('Save failed:', error)
-
-              // если ошибки, то вернуть к редактированию
-              setTimeout(() => cell.edit(true), 100)
-            })
-        }
-        return
-      }
-
-      // обновить строку в базе
-      saveData = Object.assign(saveData, {
-        [cell.getField()]: cell.getValue(),
-      })
-
-      // сохранить ячейку
-      saveToBackend(cell, saveData, `${url.value}/${rowId}`, 'PATCH')
-        .then((data) => {
-          // показать ответ?
-          console.log('Save successful:', data)
-          $toast.success(t('language.toast.edited'), TOAST_OPTIONS)
-        })
-        .catch((error) => {
-          // показать ошибки?
-          console.error('Save failed:', error)
-          // восстановить старое значение
-          cell.restoreOldValue()
-        })
+    // делается сортировка
+    tabulator.on('dataSorting', (sorters) => {
+      isAdding.value = false
     })
+
+    // ячейка редактируется
+    tabulator.on('cellEditing', tabulatorEventCellEditing)
+
+    // отмена редактирования
+    tabulator.on('cellEditCancelled', tabulatorEventCellEditCancelled)
+
+    // ячейка отредактирована
+    tabulator.on('cellEdited', (cell) =>
+      tabulatorEventCellEdited(cell, {
+        t,
+        tr: 'language',
+        url: url.value,
+        isAdding,
+      }),
+    )
   })
 }
 
@@ -228,7 +141,7 @@ const initTabulator = () => {
 
 // смена локали в vue-i18n
 watch(locale, async (newLocale) => {
-  updateTabulatorLanguage(tabulator, t, newLocale)
+  updateTabulatorI18n(tabulator, t, newLocale)
   tabulator.setColumns(columns.value)
 })
 
@@ -245,6 +158,7 @@ onMounted(() => {
     }
   })
 
+  // добавить язык
   emitter.on('tabulator:language:add-row', () => {
     if (route.query.action === 'language:create') {
       // не надо
@@ -254,7 +168,8 @@ onMounted(() => {
     }
   })
 
-  emitter.on('tabulator:reset-add', () => {
+  // отмена добавления
+  emitter.on('tabulator:language:cancel-add', () => {
     isAdding.value = false
   })
 })
@@ -284,11 +199,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
-<style scoped lang="scss">
-.tab-content {
-  &.page-langs {
-    padding-bottom: calc(var(--bs-gutter-x) * 0.5);
-  }
-}
-</style>
