@@ -1,0 +1,181 @@
+/* Bootstrap 5 Paginator Styles for Tabulator */
+.tabulator {
+  /* Container styling - matches Bootstrap pagination wrapper */
+  .tabulator-footer {
+    .tabulator-paginator {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 0;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    /* Label styling for "Showing X of Y entries" text */
+    .tabulator-page-counter,
+    .tabulator-pagination-label {
+      font-size: 0.875rem;
+      color: #6c757d;
+      margin-right: 0.5rem;
+    }
+  }
+
+  /* The pagination list wrapper */
+  .tabulator-paginator {
+    gap: 0 !important;
+
+    /* Individual page button styling */
+    .tabulator-page {
+      position: relative;
+      display: block;
+      padding: 0.375rem 0.75rem;
+      margin-left: -1px;
+      margin-right: 0;
+      font-size: 0.875rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: #0d6efd;
+      text-decoration: none;
+      background-color: #fff;
+      border-radius: 0;
+      transition:
+        color 0.15s ease-in-out,
+        background-color 0.15s ease-in-out,
+        border-color 0.15s ease-in-out;
+      cursor: pointer;
+
+      @media (max-width: 768px) {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+      }
+
+      // костыль
+      &[data-page='last'] {
+        border-color: #aaa;
+      }
+
+      /* Remove left margin for first button to fix double border */
+      // &:first-child {
+      &:first-of-type {
+        // margin-left: 0;
+        //border: 1px solid #dee2e6;
+        border-top-left-radius: 0.375rem;
+        border-bottom-left-radius: 0.375rem;
+      }
+
+      /* Add right border radius to last button */
+      // &:last-child {
+      &:last-of-type {
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+      }
+
+      /* Hover state */
+      &:hover:not(.disabled):not(.active) {
+        color: #0a58ca;
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+        z-index: 2;
+      }
+
+      /* Focus state for accessibility */
+      &:focus {
+        z-index: 3;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+      }
+
+      /* Active page styling */
+      &.active {
+        z-index: 3;
+        color: #fff;
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        cursor: default;
+      }
+
+      /* Disabled state (Previous/Next when inactive) */
+      &.disabled {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #dee2e6;
+        cursor: auto;
+      }
+
+      & + .tabulator-pages .tabulator-page {
+        border-radius: 0;
+      }
+    }
+
+    .tabulator-pages {
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      gap: 0;
+    }
+
+    /* Page size selector styling (if you use paginationSizeSelector) */
+    select {
+      padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: #212529;
+      background-color: #fff;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 16px 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      appearance: none;
+      cursor: pointer;
+
+      &:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+      }
+    }
+  }
+}
+
+/* Dark theme support */
+[data-bs-theme='dark'] {
+  .tabulator-paginator {
+    .tabulator-page {
+      color: #6ea8fe;
+      background-color: #212529;
+      border-color: #373b3e;
+
+      &:hover:not(.disabled):not(.active) {
+        color: #9ec5fe;
+        background-color: #2b3035;
+        border-color: #373b3e;
+      }
+
+      &.active {
+        color: #fff;
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+      }
+
+      &.disabled {
+        color: #6c757d;
+        background-color: #212529;
+        border-color: #373b3e;
+      }
+    }
+
+    select {
+      color: #dee2e6;
+      background-color: #212529;
+      border-color: #373b3e;
+    }
+  }
+}

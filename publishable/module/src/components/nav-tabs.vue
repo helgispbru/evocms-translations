@@ -31,7 +31,7 @@ const isTabLast = computed(() => {
   return !found || found.to === route.path
 })
 
-function onClickPrev() {
+const onClickPrev = () => {
   if (isTabFirst.value) {
     return
   }
@@ -43,7 +43,8 @@ function onClickPrev() {
     router.push({ path: prev.to })
   }
 }
-function onClickNext() {
+
+const onClickNext = () => {
   if (isTabLast.value) {
     return
   }
@@ -59,7 +60,7 @@ function onClickNext() {
 
 <template>
   <header class="nav-wrapper">
-    <span class="arrow prev" :class="{ disabled: isTabFirst }" @click="onClickPrev()">
+    <span class="arrow prev" :class="{ disabled: isTabFirst }" @click="onClickPrev">
       <font-awesome-icon icon="chevron-left"
     /></span>
     <ul class="nav nav-tabs" role="tablist">
@@ -73,7 +74,7 @@ function onClickNext() {
         >
       </li>
     </ul>
-    <span class="arrow next" :class="{ disabled: isTabLast }" @click="onClickNext()">
+    <span class="arrow next" :class="{ disabled: isTabLast }" @click="onClickNext">
       <font-awesome-icon icon="chevron-right"
     /></span>
   </header>

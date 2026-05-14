@@ -8,7 +8,7 @@ class ExistsEntry
 {
     public function handle($request, Closure $next)
     {
-        $id = $request->route('id');
+        $id = $request->route('entry_id');
 
         $entry = LanguageEntry::find($id);
 

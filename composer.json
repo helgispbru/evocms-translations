@@ -1,10 +1,9 @@
 {
     "name": "helgispbru/evocms-translations",
     "description": "EvolutionCMS Translations module",
-    "version": "1.0.1",
     "license": "MIT",
     "require": {
-        "php": "^8.0"
+        "php": "^8.1"
     },
     "autoload": {
         "psr-4": {

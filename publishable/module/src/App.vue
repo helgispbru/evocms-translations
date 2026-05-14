@@ -1,21 +1,16 @@
 <script setup>
-import { ref, reactive, computed, watch, provide, onBeforeMount } from 'vue'
-import { RouterView } from 'vue-router'
+import { ref, reactive, computed, watch, provide, onBeforeMount, nextTick } from 'vue'
+import { RouterView, useRouter } from 'vue-router'
+const router = useRouter()
+
+import { emitter } from '@/utils/emitter'
 
 // название и иконка приложения
-const title = import.meta.env.VITE_APP_TITLE || 'Module EvoCMS'
+const title = import.meta.env.VITE_APP_TITLE || 'Module EvolutionCMS'
 const icon = import.meta.env.VITE_APP_ICON || 'gear'
 // константы
 import { LOCALES } from '@/constants/locales'
 import { ACTIONS } from '@/constants/actions'
-
-// таблицы
-import { useLangsStore } from '@/stores/langs'
-import { useGroupsStore } from '@/stores/groups'
-import { useEntriesStore } from '@/stores/entries'
-const langsStore = useLangsStore()
-const groupsStore = useGroupsStore()
-const entriesStore = useEntriesStore()
 
 // многоязычность приложения
 import { useI18n } from 'vue-i18n'
@@ -39,8 +34,6 @@ const { dialogState, confirm, cancel } = useBsConfirmation()
 import { TOAST_OPTIONS } from '@/constants/toasts'
 import { useToast } from 'vue-toast-notification'
 const $toast = useToast()
-
-import { onAddEntry, onAddGroup, onAddLang } from '@/composable/useBsModal'
 
 import { onImport, onExport } from '@/composable/useApiMethods'
 
@@ -74,20 +67,20 @@ const actions = reactive([])
 // табы тут
 const tabs = computed(() => [
   {
-    title: t('languages.tabtitle'),
-    to: '/languages',
+    title: t('language.tabtitle'),
+    to: '/language',
     icon: 'language',
     active: true,
   },
   {
-    title: t('groups.tabtitle'),
-    to: '/groups',
+    title: t('group.tabtitle'),
+    to: '/group',
     icon: 'layer-group',
     active: true,
   },
   {
-    title: t('entries.tabtitle'),
-    to: '/entries',
+    title: t('entry.tabtitle'),
+    to: '/entry',
     icon: 'file-lines',
     active: true,
   },
@@ -102,18 +95,19 @@ async function onMenuClick(ev) {
   // импорт/экспорт в базу
   if (ev.startsWith('db:')) {
     switch (ev.replace('db:', '')) {
+      // импорт в базу
       case 'import':
-        // импорт в базу
+        $toast.info(`${t('actions.toast.importing')}`, TOAST_OPTIONS)
+
         if (await onImport(t)) {
           $toast.success(t('actions.toast.imported'), TOAST_OPTIONS)
-
-          langsStore.increaseTableKey()
-          groupsStore.increaseTableKey()
-          entriesStore.increaseTableKey()
         }
         break
+
+      // экспорт из базы
       case 'export':
-        // экспорт из базы
+        $toast.info(`${t('actions.toast.exporting')}`, TOAST_OPTIONS)
+
         if (await onExport(t)) {
           $toast.success(t('actions.toast.exported'), TOAST_OPTIONS)
         }
@@ -125,25 +119,39 @@ async function onMenuClick(ev) {
   if (ev.startsWith('add:')) {
     switch (ev.replace('add:', '')) {
       // добавить язык
-      case 'lang':
-        if (await onAddLang(t)) {
-          $toast.success(t('languages.toast.created'), TOAST_OPTIONS)
-          langsStore.increaseTableKey()
-        }
+      case 'language':
+        router.push({
+          path: ev.replace('add:', ''),
+          query: {
+            action: 'language:create',
+            timestamp: Date.now(),
+          },
+        })
+        emitter.emit('tabulator:language:add-row')
         break
+
       // добавить группу
       case 'group':
-        if (await onAddGroup(t)) {
-          $toast.success(t('groups.toast.created'), TOAST_OPTIONS)
-          groupsStore.increaseTableKey()
-        }
+        router.push({
+          path: ev.replace('add:', ''),
+          query: {
+            action: 'group:create',
+            timestamp: Date.now(),
+          },
+        })
+        emitter.emit('tabulator:group:add-row')
         break
+
       // добавить строку
       case 'entry':
-        if (await onAddEntry(t)) {
-          $toast.success(t('entries.toast.created'), TOAST_OPTIONS)
-          entriesStore.increaseTableKey()
-        }
+        router.push({
+          path: ev.replace('add:', ''),
+          query: {
+            action: 'entry:create',
+            timestamp: Date.now(),
+          },
+        })
+        emitter.emit('tabulator:entry:add-row')
         break
     }
   }
@@ -236,17 +244,7 @@ watch(locale, (newVal, oldVal) => {
 </template>
 
 <style lang="scss">
-// pages
-.pagination {
-  --bs-pagination-padding-x: 0.5rem;
-  --bs-pagination-padding-y: 0.25rem;
-  --bs-pagination-font-size: 0.875rem;
-  --bs-pagination-border-radius: var(--bs-border-radius-sm);
-}
-
-// datatables
-.dataTable {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+.tab-content {
+  padding-bottom: calc(var(--bs-gutter-x) * 0.5);
 }
 </style>

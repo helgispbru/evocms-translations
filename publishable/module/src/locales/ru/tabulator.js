@@ -1,0 +1,28 @@
+export default {
+  data: {
+    loading: 'Загрузка',
+    error: 'Ошибка',
+  },
+  pagination: {
+    page_size: 'На странице',
+    // btn
+    first: 'Первая',
+    prev: 'Назад',
+    next: 'Вперёд',
+    last: 'Последняя',
+    // title on hover
+    first_title: 'Первая страница',
+    prev_title: 'Предыдущая страница',
+    next_title: 'Следующая страница',
+    last_title: 'Последняя страница',
+    //
+    all: 'Все',
+    counter: {
+      showing: 'Показано',
+      of: 'из',
+      rows: 'строк',
+      pages: 'страниц',
+      items: 'шт.'
+    }
+  }
+}

@@ -3,7 +3,9 @@ export default [
   // кнопки справа сверху
   'actions',
   // страницы
-  'languages',
-  'groups',
-  'entries',
+  'language',
+  'group',
+  'entry',
+  // строки для tabulator
+  'tabulator',
 ]

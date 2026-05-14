@@ -1,0 +1,1 @@
+const t={addlanguage:"Add language",addgroup:"Add group",addentry:"Add entry",fileimport:"Import from files",fileexport:"Export to files",toast:{importing:"Start importing to DB",exporting:"Start exporting to files",imported:"All entries imported to DB",exported:"All entries exported to files"}};export{t as default};

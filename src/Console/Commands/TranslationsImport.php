@@ -44,6 +44,9 @@ class TranslationsImport extends Command
 
     public function handle()
     {
+        // не работает в laravel 8
+        // $this->withoutOverlapping();
+
         if ($this->option('overwrite')) {
             if ($this->confirm('Are you really sure you want to overwrite all translations in the database? This action cannot be undone.')) {
                 $this->overwrite = true;
