@@ -242,10 +242,17 @@ onMounted(async () => {
   emitter.on('tabulator:entry:cancel-add', () => {
     //
   })
+
+  emitter.on('tabulator:reload', () => {
+    // update
+    tabulator.setData()
+  })
 })
 
 onBeforeUnmount(() => {
   emitter.off('tabulator:entry:add-row')
+  emitter.off('tabulator:entry:cancel-add')
+  emitter.off('tabulator:reload')
 })
 
 onUnmounted(() => {
@@ -288,7 +295,10 @@ onUnmounted(() => {
                 :key="group.id"
                 @click.prevent="filters.group_id = group.id"
               >
-                {{ group.title }} <small class="text-muted">({{ group.code }})</small>
+                {{ group.title }}
+                <small v-if="group.title != group.code" class="text-muted"
+                  >({{ group.code }})</small
+                >
               </a>
             </li>
           </ul>

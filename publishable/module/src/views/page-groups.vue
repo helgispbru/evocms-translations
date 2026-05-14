@@ -172,10 +172,17 @@ onMounted(() => {
   emitter.on('tabulator:group:cancel-add', () => {
     isAdding.value = false
   })
+
+  emitter.on('tabulator:reload', () => {
+    // update
+    tabulator.setData()
+  })
 })
 
 onBeforeUnmount(() => {
   emitter.off('tabulator:group:add-row')
+  emitter.off('tabulator:group:cancel-add')
+  emitter.off('tabulator:reload')
 })
 
 onUnmounted(() => {

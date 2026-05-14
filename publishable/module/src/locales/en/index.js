@@ -4,6 +4,8 @@ export default {
     delete: 'Delete',
     save: 'Save',
     cancel: 'Cancel',
+    import: 'Import',
+    export: 'Export',
   },
   toast: {
     error: 'Error:',
