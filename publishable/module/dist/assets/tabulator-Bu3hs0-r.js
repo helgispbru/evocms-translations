@@ -1,0 +1,1 @@
+const t={data:{loading:"Loading",error:"Error"},pagination:{page_size:"Page size",first:"First",prev:"Prev",next:"Next",last:"Last",first_title:"First Page",prev_title:"Prev Page",next_title:"Next Page",last_title:"Last Page",all:"All",counter:{showing:"Showing",of:"of",rows:"rows",pages:"pages",items:"items"}}};export{t as default};
