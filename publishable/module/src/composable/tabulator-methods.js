@@ -2,6 +2,12 @@ import { useToast } from 'vue-toast-notification'
 import { TOAST_OPTIONS } from '@/constants/toasts'
 const $toast = useToast()
 
+import { library, icon } from '@fortawesome/fontawesome-svg-core'
+// кнопки в таблице
+import { faTrash, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+library.add(faTrash, faPenToSquare)
+
+import { onEditKey, onDeleteKey } from '@/composable/useBsModal'
 import { useBsConfirmation } from '@/composable/useBsConfirmation'
 const { show } = useBsConfirmation()
 
@@ -103,6 +109,64 @@ export const tabulatorRowFormatter = (row) => {
   }
 }
 
+export const tabulatorGroupHeaderFormatter = (value, count, data, group, extraData = {}) => {
+  const { group_id, t, tabulator } = extraData
+
+  // название
+  const fragment = document.createDocumentFragment()
+  fragment.appendChild(document.createTextNode(`${value}`))
+
+  // кнопка edit
+  const svgIconEdit = icon(faPenToSquare)
+  const buttonEdit = document.createElement('button')
+  buttonEdit.appendChild(svgIconEdit.node[0])
+  buttonEdit.className = 'btn btn-sm btn-link text-secondary'
+  buttonEdit.style.marginLeft = '20px'
+
+  // кнопка delete
+  const svgIconDelete = icon(faTrash)
+  const buttonDelete = document.createElement('button')
+  buttonDelete.appendChild(svgIconDelete.node[0])
+  buttonDelete.className = 'btn btn-sm btn-link text-secondary'
+
+  buttonEdit.addEventListener('click', (e) => {
+    // VERY IMPORTANT: prevents the group from toggling open/closed when the button is clicked
+    e.stopPropagation()
+
+    onEditKey(group_id, value, t).then((res) => {
+      // res.saved
+      // res.group_id
+
+      if (res.saved) {
+        $toast.success(t('entry.toast.created'), TOAST_OPTIONS)
+        // update
+        tabulator.setData()
+      }
+    })
+  })
+
+  buttonDelete.addEventListener('click', (e) => {
+    // VERY IMPORTANT: prevents the group from toggling open/closed when the button is clicked
+    e.stopPropagation()
+
+    onDeleteKey(group_id, value, t).then((res) => {
+      // res.deleted
+      // res.group_id
+
+      if (res.deleted) {
+        $toast.success(t('entry.toast.deleted'), TOAST_OPTIONS)
+        // update
+        tabulator.setData()
+      }
+    })
+  })
+
+  fragment.appendChild(buttonEdit)
+  fragment.appendChild(buttonDelete)
+
+  return fragment
+}
+
 // событие процесс редактирования
 export const tabulatorEventCellEditing = (cell) => {
   const row = cell.getRow()
@@ -129,7 +193,7 @@ export const tabulatorEventCellEditCancelled = (cell) => {
   actionCell.setValue(currentValue)
 }
 
-// событие редактирование закончено
+// событие редактирование закончено - для языка или группы
 export const tabulatorEventCellEdited = (cell, extraData = {}) => {
   const row = cell.getRow()
   const rowData = cell.getRow().getData()
@@ -223,6 +287,62 @@ export const tabulatorEventCellEdited = (cell, extraData = {}) => {
   // обновить строку в базе
   saveData = Object.assign(saveData, {
     [cell.getField()]: cell.getValue(),
+  })
+
+  // сохранить ячейку
+  saveToBackend(cell, saveData, `${url}/${rowId}`, 'PATCH')
+    .then((data) => {
+      row
+        .update({
+          id: data.id, // новый id
+          _isEditing: false,
+        })
+        .then(() => {
+          row.reformat()
+        })
+
+      $toast.success(t(tr + '.toast.edited'), TOAST_OPTIONS)
+    })
+    .catch((error) => {
+      if (error.name === 'TypeError') {
+        $toast.error(`${t('toast.errornetwork')} ${error.message}`, TOAST_OPTIONS)
+      } else {
+        $toast.error(`${t('toast.error')} ${error.message}`, TOAST_OPTIONS)
+      }
+
+      // восстановить старое значение
+      cell.restoreOldValue()
+    })
+}
+
+export const tabulatorEventCellEditedEntry = (cell, extraData = {}) => {
+  const row = cell.getRow()
+  const rowData = cell.getRow().getData()
+  const rowId = rowData.id
+
+  let value = undefined
+  const errors = []
+
+  const { t, tr, url } = extraData
+
+  // обновление строки
+  value = rowData?.value?.trim()
+
+  if (errors.length > 0) {
+    errors.forEach((el) => $toast.warning(el, TOAST_OPTIONS))
+    cell.restoreOldValue()
+    return false
+  }
+
+  let saveData = {}
+
+  // обновить строку в базе
+  saveData = Object.assign(saveData, {
+    id: rowData.id,
+    language_id: rowData.language_id,
+    language_group_id: rowData.language_group_id,
+    key: rowData.key,
+    value,
   })
 
   // сохранить ячейку

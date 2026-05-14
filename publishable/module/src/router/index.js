@@ -11,17 +11,17 @@ const router = createRouter({
     {
       path: '/language',
       name: 'language',
-      component: () => import('@/views/PageLanguages.vue'),
+      component: () => import('@/views/page-languages.vue'),
     },
     {
       path: '/group',
       name: 'group',
-      component: () => import('@/views/PageGroups.vue'),
+      component: () => import('@/views/page-groups.vue'),
     },
     {
       path: '/entry',
       name: 'entry',
-      component: () => import('@/views/PageEntries.vue'),
+      component: () => import('@/views/page-entries.vue'),
     },
   ],
 })

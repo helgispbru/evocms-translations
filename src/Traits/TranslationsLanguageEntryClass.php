@@ -14,10 +14,12 @@ use Illuminate\Validation\Rule;
 // --- строки
 trait TranslationsLanguageEntryClass
 {
-    private function rulesEntry(Request $request, $ignoreKey = null): array
+    // --- rules
+
+    private function rulesEntryCreate(Request $request, $ignoreKey = null): array
     {
         $uniqueRule = Rule::unique('language_entries', 'key')
-            ->where('language_group_id', (int) $request->input('group'));
+            ->where('language_group_id', (int) $request->input('group_id'));
 
         if ($ignoreKey) {
             // костыль ебучий - надо получить id любой записи с парой group-key,
@@ -30,13 +32,22 @@ trait TranslationsLanguageEntryClass
         }
 
         return [
-            'group' => 'required|integer|exists:language_groups,id',
+            'group_id' => 'required|integer|exists:language_groups,id',
             'key' => ['required', 'string', 'max:255', $uniqueRule],
+            'value' => 'required|string|max:255',
+        ];
+    }
+
+    // правила редактирования значения
+    private function rulesEntryEdit(Request $request, $ignoreKey = null): array
+    {
+        return [
             'value' => 'string|max:255',
         ];
     }
 
-    private function rulesEntryKey(Request $request, $ignoreKey = null): array
+    // правила редактирования ключа
+    private function rulesKeyEdit(Request $request, $ignoreKey = null): array
     {
         $uniqueRule = Rule::unique('language_entries', 'key')
             ->where('language_group_id', (int) $request->input('group_id'));
@@ -53,169 +64,53 @@ trait TranslationsLanguageEntryClass
 
         return [
             'key' => ['required', 'string', 'max:255', $uniqueRule],
+            'keyOld' => ['required', 'string'],
         ];
     }
+
+    // правила удаления ключа
+    private function rulesKeyDelete(Request $request): array
+    {
+        return [
+            'key' => ['required', 'string', 'max:255'],
+        ];
+    }
+
+    // --- methods
 
     // список записей
     public function getEntries(Request $request)
     {
-        $values = new LanguageEntry();
-
-        $req = $request->all();
-
-        // фильтр снаружи таблицы - не используется
-        /*
-        if (isset($req['search']['value']) && !empty($req['search']['value'])) {
-            $values = $values->where('code', 'like', '%' . $req['search']['value'] . '%')
-                ->orWhere('title', 'like', '%' . $req['search']['value'] . '%');
-        }
-        */
-
-        // подстановка полей
-        $substfields = [
-            // в таблице => в базе
-            'group' => 'language_group_id',
-            'key' => 'key',
-        ];
-
-        // фильтр по колонкам
-        foreach ($req['columns'] as $col) {
-            if (!isset($col['columnControl'])) {
-                continue;
-            }
-
-            $colname = $substfields[$col['data']];
-
-            // выбор из списка заданных значений
-            if (isset($col['columnControl']['list'])) {
-                $values = $values->whereIn($colname, array_values($col['columnControl']['list']));
-            }
-            // свободный поиск
-            if (isset($col['columnControl']['search'])) {
-                // value logic type
-                $type = $col['columnControl']['search']['type'];
-                $logic = $col['columnControl']['search']['logic'];
-                $value = $col['columnControl']['search']['value'];
-
-                switch ($logic) {
-                    case 'contains':
-                        $values = $values->where($colname, 'like', '%' . $value . '%');
-                        break;
-                    case 'notContains':
-                        $values = $values->where($colname, 'not like', '%' . $value . '%');
-                        break;
-                    case 'equal':
-                        $values = $values->where($colname, $value);
-                        break;
-                    case 'notEqual':
-                        $values = $values->where($colname, '!=', $value);
-                        break;
-                    case 'starts':
-                        $values = $values->where($colname, 'like', $value . '%');
-                        break;
-                    case 'ends':
-                        $values = $values->where($colname, 'like', '%' . $value);
-                        break;
-                    case 'empty':
-                        $values = $values->where($colname, '');
-                        break;
-                    case 'notEmpty':
-                        $values = $values->where($colname, '!=', '');
-                        break;
-                }
-            }
-        }
-
-        // сортировка
-        if (isset($req['order'])) {
-            // только по 1 колонке
-            $col_id = $req['order'][0]['column'];
-            $field = $req['columns'][$col_id]['data'];
-
-            switch ($req['order'][0]['dir']) {
-                case 'asc':
-                    $values = $values->orderBy($substfields[$field], 'asc');
-                    break;
-                case 'desc':
-                    $values = $values->orderBy($substfields[$field], 'desc');
-                    break;
-            }
-        }
-
-        // один (первый) язык
-        $language = Language::oldest()
-            ->first();
-        $values = $values->where('language_id', $language->id);
-
-        // общее количество
-        $count = $values->count();
-
         // страницы
-        if (isset($req['start'])) {
-            $values = $values->skip($req['start']);
+        $perPage = (int) $request->input('perPage', 25);
+
+        $group_id = (int) $request->input('group_id');
+
+        $group = LanguageGroup::find($group_id);
+
+        if (!$group) {
+            return response()->json([
+                'error' => __('evocms-translations::group.error_notfound'),
+            ], 404); // not found
         }
-        if (isset($req['length'])) {
-            $values = $values->take($req['length']);
-        }
 
-        // сколько отфильтровано
-        $filtered = $values->count();
-
-        $values = $values
-            ->get();
-
-        // добавить списки строк
-        $rows = LanguageEntry::whereIn('key', $values->pluck('key'))
-            ->join('languages', 'language_entries.language_id', '=', 'languages.id')
-            ->select('language_entries.*')
+        $entriesQuery = LanguageEntry::query()
             ->with('language')
-            ->orderBy('languages.title', 'asc')
-            ->get()
-            ->groupBy(['language_group_id', 'key']);
+            ->where('language_group_id', $group_id)
+            ->orderBy('key', 'asc');
 
-        $languages = Language::orderBy('title', 'asc')
-            ->pluck('title', 'id')
-            ->toArray();
-        $groups = LanguageGroup::orderBy('title', 'asc')
-            ->pluck('title', 'id')
-            ->toArray();
+        $paginator = $entriesQuery->paginate($perPage);
 
-        $values = $values->map(function ($item) use ($rows, $languages, $groups) {
-            // все строки по языкам
-            $item->rows = $rows[$item->language_group_id][$item->key];
-            //
-            // $item->language = $languages[$item->language_id];
-            $item->group = $groups[$item->language_group_id];
-            return $item;
-        });
-
-        // добавить ColumnControl для DataTables
-        $column_control = [];
-        // по группе
-        $column_control['group'] = LanguageGroup::orderBy('title', 'asc')
-            ->pluck('title', 'id')
-            ->map(function ($val, $key) {
-                return ['label' => $val, 'value' => $key];
-            })
-            ->values();
-
-        return response([
-            'draw' => (int) $request->input('draw'),
-            'recordsTotal' => $count, // всего
-            'recordsFiltered' => $filtered, // отфильтровано
-            'data' => $values->toArray(),
-            "columnControl" => $column_control,
-            'timestamp' => Carbon::now()->toISOString(),
-        ]);
+        return $paginator;
     }
 
     // создать строку перевода
     public function createEntry(Request $request)
     {
-        $data = $request->only('group', 'key', 'value');
+        $data = $request->only('group_id', 'key', 'value');
         $data['key'] = Str::slug($data['key'], '_');
 
-        $validator = Validator::make($data, $this->rulesEntry($request));
+        $validator = Validator::make($data, $this->rulesEntryCreate($request));
 
         if ($validator->fails()) {
             return response()
@@ -223,7 +118,7 @@ trait TranslationsLanguageEntryClass
                     'error' => __('evocms-translations::entry.error_create'),
                     'errors' => $validator->errors(),
                     'timestamp' => Carbon::now()->toISOString(),
-                ], 400);
+                ], 422); // Unprocessable Entity
         }
 
         $validated = $validator->validated();
@@ -235,7 +130,7 @@ trait TranslationsLanguageEntryClass
         foreach ($languages->toArray() as $el) {
             $entry = LanguageEntry::create([
                 'language_id' => $el['id'],
-                'language_group_id' => $validated['group'],
+                'language_group_id' => $validated['group_id'],
                 'key' => $validated['key'],
                 'value' => $validated['value'],
             ]);
@@ -244,7 +139,7 @@ trait TranslationsLanguageEntryClass
                 return response()->json([
                     'error' => __('evocms-translations::entry.error_create'),
                     'timestamp' => Carbon::now()->toISOString(),
-                ], 400);
+                ], 500); // internal error
             }
 
             $created++;
@@ -256,16 +151,14 @@ trait TranslationsLanguageEntryClass
         ]);
     }
 
-    // обновить ключ
-    public function updateEntryKey(Request $request, $group_id, $key_id)
+    // изменение одного поля в строке языка
+    public function patchEntry(Request $request, $entry_id)
     {
-        // проверка существования $group_id, $key_id в middleware ExistsKey
-        $request->merge(['group_id' => $group_id]);
+        // проверка существования $entry_id в middleware ExistsEntry
 
-        $data = $request->only('key');
-        $data['key'] = Str::slug($data['key'], '_');
+        $data = $request->only('value');
 
-        $validator = Validator::make($data, $this->rulesEntryKey($request, $data['key']));
+        $validator = Validator::make($data, $this->rulesEntryEdit($request, $entry_id));
 
         if ($validator->fails()) {
             return response()
@@ -273,119 +166,106 @@ trait TranslationsLanguageEntryClass
                     'error' => __('evocms-translations::entry.error_update'),
                     'errors' => $validator->errors(),
                     'timestamp' => Carbon::now()->toISOString(),
-                ], 400);
+                ], 422); // Unprocessable Entity
         }
 
         $validated = $validator->validated();
 
-        $res = LanguageEntry::where('id', $key_id)
-            ->where('language_group_id', $group_id)
-            ->first();
+        $validated['value'] = trim($validated['value']);
 
-        $entry = LanguageEntry::where('key', $res->key)
-            ->where('language_group_id', $group_id)
-            ->update([
-                'key' => $validated['key'],
-            ]);
-
-        if (!$entry) {
+        try {
+            $updated = LanguageEntry::query()
+                ->where('id', $entry_id)
+                ->update($validated);
+        } catch (\Exception $e) {
             return response()->json([
                 'error' => __('evocms-translations::entry.error_update'),
                 'timestamp' => Carbon::now()->toISOString(),
-            ], 400);
+            ], 500); // internal error
         }
 
         return response([
+            'updated' => $updated,
+            'timestamp' => Carbon::now()->toISOString(),
+        ]);
+    }
+
+    // обновить ключ
+    public function patchKey(Request $request, $group_id)
+    {
+        // проверка существования $group_id в middleware ExistsGroup
+
+        $request->merge(['group_id' => $group_id]);
+
+        $data = $request->only('key', 'keyOld');
+        $data['key'] = Str::slug($data['key'], '_');
+
+        $validator = Validator::make($data, $this->rulesKeyEdit($request, $data['key']));
+
+        if ($validator->fails()) {
+            return response()
+                ->json([
+                    'error' => __('evocms-translations::entry.error_update'),
+                    'errors' => $validator->errors(),
+                    'timestamp' => Carbon::now()->toISOString(),
+                ], 422); // Unprocessable Entity
+        }
+
+        $validated = $validator->validated();
+
+        try {
+            $updated = LanguageEntry::query()
+                ->where('key', $validated['keyOld'])
+                ->where('language_group_id', $group_id)
+                ->update([
+                    'key' => $validated['key'],
+                ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => __('evocms-translations::entry.error_update'),
+                'timestamp' => Carbon::now()->toISOString(),
+            ], 500); // internal error
+        }
+
+        return response([
+            'updated' => $updated,
             'timestamp' => Carbon::now()->toISOString(),
         ]);
     }
 
     // удалить ключ
-    public function deleteEntryKey(Request $request, $group_id, $key_id)
+    public function deleteKey(Request $request, $group_id)
     {
-        // проверка $group_id, $key_id, в middleware
+        // проверка $group_id в middleware
 
-        $entry = LanguageEntry::find($key_id);
+        $data = $request->only('key');
+
+        $validator = Validator::make($data, $this->rulesKeyDelete($request));
+
+        if ($validator->fails()) {
+            return response()
+                ->json([
+                    'error' => __('evocms-translations::entry.error_delete'),
+                    'errors' => $validator->errors(),
+                    'timestamp' => Carbon::now()->toISOString(),
+                ], 422); // Unprocessable Entity
+        }
+
+        $validated = $validator->validated();
 
         try {
-            $deleted = LanguageEntry::where('key', $entry->key)
+            $deleted = LanguageEntry::where('key', $validated['key'])
                 ->where('language_group_id', $group_id)
                 ->delete();
         } catch (\Exception $e) {
             return response()->json([
                 'error' => __('evocms-translations::entry.error_delete'),
                 'timestamp' => Carbon::now()->toISOString(),
-            ], 400);
+            ], 500); // internal error
         }
 
         return response([
-            'updated' => $updated,
-            'timestamp' => Carbon::now()->toISOString(),
-        ]);
-    }
-
-    // обновить значение
-    public function updateEntryValue(Request $request, $group_id, $key_id, $language_id)
-    {
-        // проверка существования $group_id, $key_id, $language_id в middleware ExistsEntry
-
-        $data = $request->only('value');
-
-        $validator = Validator::make($data, [
-            'value' => 'string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return response()
-                ->json([
-                    'error' => __('evocms-translations::entry.error_update'),
-                    'errors' => $validator->errors(),
-                    'timestamp' => Carbon::now()->toISOString(),
-                ], 400);
-        }
-
-        $validated = $validator->validated();
-
-        $entry = LanguageEntry::where('id', $key_id)
-        // ->where('language_group_id', $group_id)
-        // ->where('language_id', $language_id)
-            ->update([
-                'value' => $validated['value'],
-            ]);
-
-        if (!$entry) {
-            return response()->json([
-                'error' => __('evocms-translations::entry.error_update'),
-                'timestamp' => Carbon::now()->toISOString(),
-            ], 400);
-        }
-
-        return response([
-            'timestamp' => Carbon::now()->toISOString(),
-        ]);
-    }
-
-    // удалить значение
-    public function deleteEntryValue(Request $request, $group_id, $key_id, $language_id)
-    {
-        // проверка $group_id, $key_id, $language_id в middleware
-
-        try {
-            $updated = LanguageEntry::where('id', $key_id)
-            // ->where('language_group_id', $group_id)
-            // ->where('language_id', $language_id)
-                ->update([
-                    'value' => null,
-                ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => __('evocms-translations::entry.error_delete'),
-                'timestamp' => Carbon::now()->toISOString(),
-            ], 400);
-        }
-
-        return response([
-            'updated' => $updated,
+            'deleted' => $deleted,
             'timestamp' => Carbon::now()->toISOString(),
         ]);
     }

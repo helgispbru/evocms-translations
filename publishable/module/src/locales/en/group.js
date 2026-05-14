@@ -21,8 +21,6 @@ export default {
     error: {
       nocode: 'Code is required',
       notitle: 'Title is required',
-      // noid: 'No group ID',
-      // noaction: 'No group action',
     }
   }
 }

@@ -1,8 +1,8 @@
 <?php
 use Helgispbru\EvolutionCMS\Translations\Controllers\TranslationsController;
 use Helgispbru\EvolutionCMS\Translations\Middleware\Auth;
+use Helgispbru\EvolutionCMS\Translations\Middleware\ExistsEntry;
 use Helgispbru\EvolutionCMS\Translations\Middleware\ExistsGroup;
-use Helgispbru\EvolutionCMS\Translations\Middleware\ExistsKey;
 use Helgispbru\EvolutionCMS\Translations\Middleware\ExistsLanguage;
 use Helgispbru\EvolutionCMS\Translations\Middleware\SetLocale;
 
@@ -32,7 +32,7 @@ Route::group([
                 'prefix' => 'languages',
             ], function () {
                 // список языков
-                Route::get('/', [TranslationsController::class, 'getLanguages'])->name('languages.index');
+                Route::get('/', [TranslationsController::class, 'getLanguages'])->name('languages.pages');
                 // создать язык
                 Route::post('/', [TranslationsController::class, 'createLanguage'])->name('languages.create');
 
@@ -55,7 +55,9 @@ Route::group([
                 'prefix' => 'groups',
             ], function () {
                 // список групп
-                Route::get('/', [TranslationsController::class, 'getGroups'])->name('groups.index');
+                Route::get('/', [TranslationsController::class, 'getGroups'])->name('groups.pages');
+                // список групп без paginator
+                Route::get('/list', [TranslationsController::class, 'getGroupsList'])->name('groups.list');
                 // создать группу
                 Route::post('/', [TranslationsController::class, 'createGroup'])->name('groups.create');
 
@@ -68,7 +70,7 @@ Route::group([
                 ], function () {
                     // изменение одного поля
                     Route::patch('/', [TranslationsController::class, 'patchGroup'])->name('groups.patch');
-                    // удалить язык
+                    // удалить группу
                     Route::delete('/', [TranslationsController::class, 'deleteGroup'])->name('groups.delete');
                 });
             });
@@ -78,7 +80,7 @@ Route::group([
                 'prefix' => 'entries',
             ], function () {
                 // список строк
-                Route::get('/', [TranslationsController::class, 'getEntries'])->name('entries.index');
+                Route::get('/', [TranslationsController::class, 'getEntries'])->name('entries.pages');
                 // создать строку
                 Route::post('/', [TranslationsController::class, 'createEntry'])->name('entries.create');
 
@@ -90,34 +92,22 @@ Route::group([
                     ],
                     'where' => ['group_id' => '[0-9]+'],
                 ], function () {
-                    // по ключу
-                    Route::group([
-                        'prefix' => 'key/{key_id}',
-                        'middleware' => [
-                            ExistsKey::class,
-                        ],
-                    ], function () {
-                        // - обновить ключ
-                        Route::put('/', [TranslationsController::class, 'updateEntryKey'])->name('entries.key.update');
+                    // изменения ключа
+                    Route::patch('key', [TranslationsController::class, 'patchKey'])->name('entries.patch.key');
+                    // удаление ключа
+                    Route::delete('key', [TranslationsController::class, 'deleteKey'])->name('entries.delete.key');
+                });
 
-                        // - удалить ключ
-                        Route::delete('/', [TranslationsController::class, 'deleteEntryKey'])->name('entries.key.delete');
-
-                        // - по языку
-                        Route::group([
-                            'prefix' => 'language/{language_id}',
-                            'middleware' => [
-                                ExistsLanguage::class,
-                            ],
-                            'where' => ['language_id' => '[0-9]+'],
-                        ], function () {
-                            // -- обновить значение ключа
-                            Route::put('/', [TranslationsController::class, 'updateEntryValue'])->name('entries.value.update');
-
-                            // -- очистить значение ключа
-                            Route::delete('/', [TranslationsController::class, 'deleteEntryValue'])->name('entries.value.delete');
-                        });
-                    });
+                // для строки
+                Route::group([
+                    'prefix' => '{entry_id}',
+                    'middleware' => [
+                        ExistsEntry::class,
+                    ],
+                    'where' => ['entry_id' => '[0-9]+'],
+                ], function () {
+                    // изменение значения поля
+                    Route::patch('/', [TranslationsController::class, 'patchEntry'])->name('entries.patch.value');
                 });
             });
         });

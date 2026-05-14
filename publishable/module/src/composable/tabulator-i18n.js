@@ -30,10 +30,10 @@ export const createTabulatorI18n = (t) => ({
 
 // обновить язык
 export const updateTabulatorI18n = (tabulator, t, locale) => {
-  if (!tabulator) return;
+  if (!tabulator) return
 
-  const langPack = createTabulatorI18n(t);
+  const langPack = createTabulatorI18n(t)
 
-  tabulator.modules.localize.installLang(locale, langPack);
-  tabulator.setLocale(locale);
+  tabulator.modules.localize.installLang(locale, langPack)
+  tabulator.setLocale(locale)
 }

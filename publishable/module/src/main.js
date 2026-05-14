@@ -6,11 +6,6 @@ import './assets/bootstrap.scss'
 import 'vue-toast-notification/dist/theme-bootstrap.css'
 // import 'vue-toast-notification/dist/theme-sugar.css'
 
-// стили бутстрапа для таблицы datatables
-// import 'datatables.net-bs5/css/dataTables.bootstrap5.css'
-// стили ColumnControls
-// import 'datatables.net-columncontrol-dt/css/columnControl.dataTables.css'
-
 // tabulator.js
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.css'
 

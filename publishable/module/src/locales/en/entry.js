@@ -2,21 +2,19 @@ export default {
   tabtitle: 'Entries',
   title: 'Edit entries',
   cols: {
-    group: 'GROUP',
-    key: 'KEY',
+    language: 'LANG',
     value: 'VALUE',
   },
   modal: {
     add: 'Add entry',
-    edit: 'Edit entry',
-    delete: 'Delete entry',
-    delete_key: 'Confirm entry key deletion',
-    delete_value: 'Confirm entry value deletion',
+    edit_key: 'Edit key',
+    delete: 'Delete entries',
+    delete_key: 'Confirm delete all entries by selected key.',
   },
   toast: {
     created: 'Entry created',
     edited: 'Entry edited',
-    deleted: 'Entry deleted',
+    deleted: 'Entries deleted',
   },
   form: {
     language: 'Language',
@@ -28,6 +26,11 @@ export default {
     },
     error: {
       //
+    },
+    search: {
+      select_group: 'Select group',
+      label_rows: 'Rows per page:',
+      button_refresh: 'Refresh',
     }
   }
 }

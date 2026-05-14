@@ -33,13 +33,13 @@ async function submitModalForm(values) {
   const form = Object.assign({}, modalStore.data, values, { locale: locale.value })
 
   delete form.groups
-  delete form.languages
 
-  const url = `${URL_PATH}/entries/group/${form.language_group_id}/key/${form.key_id}`
+  const path = 'entries'
+  const url = `${URL_PATH}/${path}/group/${form.group_id}/key`
 
   try {
     const options = {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         // 'Authorization': 'Bearer your-token-here'
@@ -72,7 +72,10 @@ async function submitModalForm(values) {
     message.value = data.message || ''
     error.value = data.error || ''
 
-    model.value.data = { saved: true }
+    model.value.data = {
+      saved: true,
+      group_id: form.group_id,
+    }
     model.value.action = 'close'
   } catch (err) {
     if (err.name === 'TypeError') {
@@ -93,17 +96,22 @@ function resetModalForm() {
   error.value = ''
   message.value = ''
 
-  model.value.data = { saved: false }
+  model.value.data = {
+    saved: false,
+    group_id: modalStore.data.group_id,
+  }
   model.value.action = 'close'
 }
 
 const group_title = computed(() => {
   const foundItem = Object.values(toRaw(modalStore.data.groups)).find(
-    (el) => el.id === parseInt(modalStore.data.language_group_id),
+    (el) => el.id === parseInt(modalStore.data.group_id),
   )
+
   if (foundItem) {
     return foundItem.title
   }
+
   return 'n/a'
 })
 </script>
@@ -120,7 +128,7 @@ const group_title = computed(() => {
   >
     <!-- группа -->
     <div class="row mb-1 align-items-center">
-      <div class="col-4">{{ t('entries.form.group') }}</div>
+      <div class="col-4">{{ t('entry.form.group') }}</div>
       <div class="col-8 py-2 ps-4">
         <strong>{{ group_title }}</strong>
       </div>
@@ -132,7 +140,7 @@ const group_title = computed(() => {
         class="col-4 col-form-label"
         :class="{ 'pb-4': !isKeyValid }"
         for="validationEntryKey"
-        >{{ t('entries.form.key') }}</label
+        >{{ t('entry.form.key') }}</label
       >
       <div class="col-8">
         <Field

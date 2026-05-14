@@ -12,10 +12,6 @@ const icon = import.meta.env.VITE_APP_ICON || 'gear'
 import { LOCALES } from '@/constants/locales'
 import { ACTIONS } from '@/constants/actions'
 
-// таблицы
-import { useEntriesStore } from '@/stores/entries'
-const entriesStore = useEntriesStore()
-
 // многоязычность приложения
 import { useI18n } from 'vue-i18n'
 import i18n from './i18n'
@@ -38,8 +34,6 @@ const { dialogState, confirm, cancel } = useBsConfirmation()
 import { TOAST_OPTIONS } from '@/constants/toasts'
 import { useToast } from 'vue-toast-notification'
 const $toast = useToast()
-
-import { onAddEntry } from '@/composable/useBsModal'
 
 import { onImport, onExport } from '@/composable/useApiMethods'
 
@@ -103,15 +97,17 @@ async function onMenuClick(ev) {
     switch (ev.replace('db:', '')) {
       // импорт в базу
       case 'import':
+        $toast.info(`${t('actions.toast.importing')}`, TOAST_OPTIONS)
+
         if (await onImport(t)) {
           $toast.success(t('actions.toast.imported'), TOAST_OPTIONS)
-
-          entriesStore.increaseTableKey()
         }
         break
 
       // экспорт из базы
       case 'export':
+        $toast.info(`${t('actions.toast.exporting')}`, TOAST_OPTIONS)
+
         if (await onExport(t)) {
           $toast.success(t('actions.toast.exported'), TOAST_OPTIONS)
         }
@@ -131,7 +127,6 @@ async function onMenuClick(ev) {
             timestamp: Date.now(),
           },
         })
-
         emitter.emit('tabulator:language:add-row')
         break
 
@@ -144,16 +139,19 @@ async function onMenuClick(ev) {
             timestamp: Date.now(),
           },
         })
-
         emitter.emit('tabulator:group:add-row')
         break
 
       // добавить строку
       case 'entry':
-        if (await onAddEntry(t)) {
-          $toast.success(t('entries.toast.created'), TOAST_OPTIONS)
-          entriesStore.increaseTableKey()
-        }
+        router.push({
+          path: ev.replace('add:', ''),
+          query: {
+            action: 'entry:create',
+            timestamp: Date.now(),
+          },
+        })
+        emitter.emit('tabulator:entry:add-row')
         break
     }
   }

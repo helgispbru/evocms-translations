@@ -1,6 +1,6 @@
 {
   "name": "evocms-translations",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -37,12 +37,6 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/test-utils": "^2.4.6",
     "bootstrap": "^5.3.7",
-    "datatables.net-bs5": "^2.3.2",
-    "datatables.net-columncontrol-dt": "^1.1.1",
-    "datatables.net-dt": "^2.3.2",
-    "datatables.net-plugins": "^2.3.2",
-    "datatables.net-responsive": "^3.0.5",
-    "datatables.net-vue3": "^3.0.4",
     "eslint": "^9.31.0",
     "eslint-plugin-vue": "~10.0.0",
     "globals": "^16.0.0",

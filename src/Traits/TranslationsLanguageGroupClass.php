@@ -13,6 +13,8 @@ use Illuminate\Validation\Rule;
 // --- группы
 trait TranslationsLanguageGroupClass
 {
+    // --- rules
+
     private function rulesGroup(Request $request, $ignoreId = null): array
     {
         $keys = array_keys($request->all());
@@ -22,12 +24,12 @@ trait TranslationsLanguageGroupClass
             switch ($key) {
                 // group title
                 case 'title':
-                    $rules['title'] = 'required|max:255'; // required_without_all:code,
+                    $rules['title'] = 'required|max:255';
                     break;
 
                 // group code
                 case 'code':
-                    $rules['code'] = ['required', 'max:255']; // 'required_without_all:title',
+                    $rules['code'] = ['required', 'max:255'];
                     if ($ignoreId) {
                         // обновить
                         $rules['code'][] = Rule::unique('language_groups', 'code')
@@ -43,12 +45,14 @@ trait TranslationsLanguageGroupClass
         return $rules;
     }
 
-    // список языков
+    // --- methods
+
+    // список языков с paginator
     public function getGroups(Request $request)
     {
         // страницы
-        // $onpage = 10; // default
-        $onpage = (int) $request->input('size', 10);
+        // $onpage = 20; // default
+        $onpage = (int) $request->input('size', 20);
 
         $values = new LanguageGroup();
 
@@ -69,6 +73,30 @@ trait TranslationsLanguageGroupClass
         $paginator = $values->paginate($onpage);
 
         return response($paginator);
+    }
+
+    // список языков без paginator
+    public function getGroupsList(Request $request)
+    {
+        $values = new LanguageGroup();
+
+        $req = $request->all();
+
+        // не реализовано
+        // фильтр
+        if (isset($req['search']['value']) && !empty($req['search']['value'])) {
+            $values = $values->where('code', 'like', $req['search']['value'] . '%')
+                ->orWhere('title', 'like', $req['search']['value'] . '%');
+        }
+
+        // сортировка (только по 1 параметру)
+        if (isset($req['sort'])) {
+            $values = $values->orderBy($req['sort'][0]['field'], $req['sort'][0]['dir']);
+        }
+
+        $values = $values->get();
+
+        return response($values->toArray());
     }
 
     // создать группу
@@ -139,7 +167,7 @@ trait TranslationsLanguageGroupClass
         ]);
     }
 
-    // изменение одного поля в строке языка
+    // изменение одного поля в группе
     public function patchGroup(Request $request, $group_id)
     {
         // проверка существования $group_id в middleware ExistsGroup

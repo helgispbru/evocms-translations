@@ -13,6 +13,8 @@ use Illuminate\Validation\Rule;
 // --- языки
 trait TranslationsLanguageClass
 {
+    // --- rules
+
     private function rulesLanguage(Request $request, $ignoreId = null): array
     {
         $keys = array_keys($request->all());
@@ -22,12 +24,12 @@ trait TranslationsLanguageClass
             switch ($key) {
                 // language title
                 case 'title':
-                    $rules['title'] = 'required|max:20'; // required_without_all:code,
+                    $rules['title'] = 'required|max:20';
                     break;
 
                 // language code
                 case 'code':
-                    $rules['code'] = ['required', 'max:2']; // 'required_without_all:title',
+                    $rules['code'] = ['required', 'max:2'];
                     if ($ignoreId) {
                         // обновить
                         $rules['code'][] = Rule::unique('languages', 'code')
@@ -42,6 +44,8 @@ trait TranslationsLanguageClass
 
         return $rules;
     }
+
+    // --- methods
 
     // список языков
     public function getLanguages(Request $request)

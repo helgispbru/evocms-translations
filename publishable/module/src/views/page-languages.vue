@@ -42,17 +42,17 @@ const columns = computed(() => [
   {
     title: t('language.cols.code'),
     field: 'code',
-    width: '15%',
+    width: 85,
     sorter: 'string',
     editor: 'input',
-    validator: ['required', 'string', 'minLength:1', 'maxLength:2'],
+    validator: ['required', 'alphanumeric', 'minLength:1', 'maxLength:2'],
   },
   {
     title: t('language.cols.title'),
     field: 'title',
     sorter: 'string',
     editor: 'input',
-    validator: ['alphanumeric', 'maxLength:20'],
+    validator: ['string', 'maxLength:20'],
   },
   {
     title: t('language.cols.actions'),

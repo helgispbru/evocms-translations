@@ -4,7 +4,7 @@ import { URL_PATH } from '@/constants/settings'
 import { useToast } from 'vue-toast-notification'
 const $toast = useToast()
 
-const onImport = async (t) => {
+export const onImport = async (t) => {
   try {
     const options = {
       method: 'GET',
@@ -42,7 +42,7 @@ const onImport = async (t) => {
   }
 }
 
-const onExport = async (t) => {
+export const onExport = async (t) => {
   try {
     const options = {
       method: 'GET',
@@ -80,16 +80,26 @@ const onExport = async (t) => {
   }
 }
 
-const getLanguages = async (t) => {
+// список групп с paginator
+export const getGroups = async (t) => {
+  const path = 'groups'
+  const url = `${URL_PATH}/${path}`
+
+  const options = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      // 'Authorization': 'Bearer your-token-here'
+    },
+    // body: JSON.stringify(saveData),
+    // mode: 'cors', // no-cors, *cors, same-origin
+    // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+    // credentials: 'same-origin', // include, *same-origin, omit
+    // redirect: 'follow' // manual, *follow, error
+  }
+
   try {
-    const options = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Authorization': 'Bearer your-token-here'
-      },
-    }
-    const response = await fetch(`${URL_PATH}/languages`, options)
+    const response = await fetch(url, options)
     const data = await response.json()
 
     if (!response.ok) {
@@ -106,6 +116,7 @@ const getLanguages = async (t) => {
     if (data.data.length) {
       return data.data
     }
+
     return []
   } catch (err) {
     if (err.name === 'TypeError') {
@@ -122,16 +133,26 @@ const getLanguages = async (t) => {
   }
 }
 
-const getGroups = async (t) => {
+// список групп без paginator
+export const getGroupsList = async (t) => {
+  const path = 'groups/list'
+  const url = `${URL_PATH}/${path}`
+
+  const options = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      // 'Authorization': 'Bearer your-token-here'
+    },
+    // body: JSON.stringify(saveData),
+    // mode: 'cors', // no-cors, *cors, same-origin
+    // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+    // credentials: 'same-origin', // include, *same-origin, omit
+    // redirect: 'follow' // manual, *follow, error
+  }
+
   try {
-    const options = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Authorization': 'Bearer your-token-here'
-      },
-    }
-    const response = await fetch(`${URL_PATH}/groups`, options)
+    const response = await fetch(url, options)
     const data = await response.json()
 
     if (!response.ok) {
@@ -145,9 +166,10 @@ const getGroups = async (t) => {
     }
 
     // преобразовать
-    if (data.data.length) {
-      return data.data
+    if (data.length) {
+      return data
     }
+
     return []
   } catch (err) {
     if (err.name === 'TypeError') {
@@ -162,8 +184,4 @@ const getGroups = async (t) => {
 
     throw err
   }
-}
-
-export {
-  onImport, onExport, getLanguages, getGroups
 }

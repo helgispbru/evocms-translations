@@ -5,6 +5,8 @@ export default {
   fileimport: 'Импорт из файлов',
   fileexport: 'Экспорт в файлы',
   toast: {
+    importing: 'Начат импорт в базу',
+    exporting: 'Начат экспорт в файлы',
     imported: 'Все строки импортированы в базу',
     exported: 'Все строки экспортированы в файлы',
   }

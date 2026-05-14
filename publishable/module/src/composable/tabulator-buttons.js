@@ -1,13 +1,10 @@
-import { h, render } from 'vue'
-
 import { emitter } from '@/utils/emitter'
 
 import {
   tabulatorHandleRowDelete,
 } from '@/composable/tabulator-methods'
 
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { library, icon } from '@fortawesome/fontawesome-svg-core'
 // кнопки в таблице
 import { faTrash, faXmark, } from '@fortawesome/free-solid-svg-icons'
 library.add(faTrash, faXmark,)
@@ -48,7 +45,6 @@ const handleButtonClick = async (action, page, cell, t) => {
 
 // создание кнопок в строке
 export const actionFormatter = (cell, formatterParams, onRendered) => {
-  const id = cell.getValue()
   const row = cell.getRow()
   const rowData = row.getData()
 
@@ -67,18 +63,16 @@ export const actionFormatter = (cell, formatterParams, onRendered) => {
   actions.forEach((el) => {
     const button = document.createElement('button')
 
-    button.dataset.action = el.action
-    button.dataset.page = page
-    button.dataset.id = id
-
-    const iconVNode = h(FontAwesomeIcon, {
-      icon: el.icon,
-    })
-    render(iconVNode, button)
+    const svgIcon = icon(el.icon)
+    button.appendChild(svgIcon.node[0])
 
     const classes = ['btn', 'btn-link', 'text-secondary', 'py-0']
     button.classList.add(...classes)
-    button.onclick = () => handleButtonClick(el.action, page, cell, t)
+
+    button.addEventListener('click', (e) => {
+      e.stopPropagation()
+      handleButtonClick(el.action, page, cell, t)
+    })
 
     btns[el.action] = button
   })

@@ -21,8 +21,6 @@ export default {
     error: {
       nocode: 'Code is required',
       notitle: 'Title is required',
-      // noid: 'No language ID',
-      // noaction: 'No language action',
     }
   }
 }

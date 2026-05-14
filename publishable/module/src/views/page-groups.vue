@@ -45,14 +45,14 @@ const columns = computed(() => [
     width: '30%',
     sorter: 'string',
     editor: 'input',
-    validator: ['required', 'string', 'maxLength:255'],
+    validator: ['required', 'alphanumeric', 'maxLength:255'],
   },
   {
     title: t('group.cols.title'),
     field: 'title',
     sorter: 'string',
     editor: 'input',
-    validator: ['alphanumeric', 'maxLength:255'],
+    validator: ['string', 'maxLength:255'],
   },
   {
     title: t('group.cols.actions'),

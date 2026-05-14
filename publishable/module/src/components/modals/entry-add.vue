@@ -42,7 +42,8 @@ async function submitModalForm(values) {
 
   delete form.groups
 
-  const url = `${URL_PATH}/entries`
+  const path = 'entries'
+  const url = `${URL_PATH}/${path}`
 
   try {
     const options = {
@@ -85,7 +86,10 @@ async function submitModalForm(values) {
     message.value = data.message || ''
     error.value = data.error || ''
 
-    model.value.data = { saved: true }
+    model.value.data = {
+      saved: true,
+      group_id: form.group_id,
+    }
     model.value.action = 'close'
   } catch (err) {
     if (err.name === 'TypeError') {
@@ -106,7 +110,10 @@ function resetModalForm() {
   error.value = ''
   message.value = ''
 
-  model.value.data = { saved: false }
+  model.value.data = {
+    saved: false,
+    group_id: modalStore.data.group_id,
+  }
   model.value.action = 'close'
 }
 </script>
@@ -118,7 +125,7 @@ function resetModalForm() {
     class="needs-validation"
     name="EntryAddForm"
     :initial-values="{
-      group: modalStore.data.group,
+      group_id: modalStore.data.group_id,
       key: modalStore.data.key,
       value: modalStore.data.value,
     }"
@@ -129,11 +136,11 @@ function resetModalForm() {
         class="col-4 col-form-label"
         :class="{ 'pb-4': !isGroupValid }"
         for="validationEntryGroup"
-        >{{ t('entries.form.group') }}</label
+        >{{ t('entry.form.group') }}</label
       >
       <div class="col-8">
         <Field
-          name="group"
+          name="group_id"
           as="select"
           ref="groupField"
           rules="required"
@@ -142,13 +149,13 @@ function resetModalForm() {
           id="validationEntryGroup"
           aria-describedby="validationEntryGroupFeedback"
         >
-          <option value="">{{ t('entries.form.values.notselected') }}</option>
-          <option v-for="el in modalStore.data.groups" :value="el.id" :key="el.key">
+          <option value="">{{ t('entry.form.values.notselected') }}</option>
+          <option v-for="el in modalStore.data.groups" :value="el.id" :key="el.code">
             {{ el.title }}
           </option>
         </Field>
         <ErrorMessage
-          name="group"
+          name="group_id"
           as="div"
           class="invalid-feedback"
           id="validationEntryGroupFeedback"
@@ -162,7 +169,7 @@ function resetModalForm() {
         class="col-4 col-form-label"
         :class="{ 'pb-4': !isKeyValid }"
         for="validationEntryKey"
-        >{{ t('entries.form.key') }}</label
+        >{{ t('entry.form.key') }}</label
       >
       <div class="col-8">
         <Field
@@ -191,7 +198,7 @@ function resetModalForm() {
         class="col-4 col-form-label"
         :class="{ 'pb-4': !isValueValid }"
         for="validationEntryValue"
-        >{{ t('entries.form.value') }}</label
+        >{{ t('entry.form.value') }}</label
       >
       <div class="col-8">
         <Field
