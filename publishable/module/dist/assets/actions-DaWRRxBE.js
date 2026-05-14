@@ -1,1 +1,0 @@
-const t={addlanguage:"Добавить язык",addgroup:"Добавить группу",addentry:"Добавить перевод",fileimport:"Импорт из файлов",fileexport:"Экспорт в файлы",toast:{importing:"Начат импорт в базу",exporting:"Начат экспорт в файлы",imported:"Все строки импортированы в базу",exported:"Все строки экспортированы в файлы"}};export{t as default};
