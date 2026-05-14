@@ -29,7 +29,7 @@ import navTabs from '@/components/nav-tabs.vue'
 import BsModal from '@/components/service/bs-modal.vue'
 import BsConfirmation from '@/components/service/bs-confirmation.vue'
 import { useBsConfirmation } from '@/composable/useBsConfirmation'
-const { dialogState, confirm, cancel } = useBsConfirmation()
+const { show, dialogState, confirm, cancel } = useBsConfirmation()
 
 import { TOAST_OPTIONS } from '@/constants/toasts'
 import { useToast } from 'vue-toast-notification'
@@ -92,20 +92,45 @@ async function onMenuClick(ev) {
     changeLocale(ev.replace('lang:', ''))
   }
 
+  let confirmed = undefined
+
   // импорт/экспорт в базу
   if (ev.startsWith('db:')) {
     switch (ev.replace('db:', '')) {
       // импорт в базу
       case 'import':
+        confirmed = await show({
+          title: t('actions.confirm.import.title'),
+          message: t('actions.confirm.import.message'),
+          okButton: t('btn.import'),
+          cancelButton: t('btn.cancel'),
+        })
+
+        if (!confirmed) {
+          return false
+        }
+
         $toast.info(`${t('actions.toast.importing')}`, TOAST_OPTIONS)
 
         if (await onImport(t)) {
           $toast.success(t('actions.toast.imported'), TOAST_OPTIONS)
+          emitter.emit('tabulator:reload')
         }
         break
 
       // экспорт из базы
       case 'export':
+        confirmed = await show({
+          title: t('actions.confirm.export.title'),
+          message: t('actions.confirm.export.message'),
+          okButton: t('btn.export'),
+          cancelButton: t('btn.cancel'),
+        })
+
+        if (!confirmed) {
+          return false
+        }
+
         $toast.info(`${t('actions.toast.exporting')}`, TOAST_OPTIONS)
 
         if (await onExport(t)) {

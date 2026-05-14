@@ -9,5 +9,15 @@ export default {
     exporting: 'Start exporting to files',
     imported: 'All entries imported to DB',
     exported: 'All entries exported to files',
+  },
+  confirm: {
+    import: {
+      title: 'Import from files',
+      message: 'Import data from files to DB? Languages data will be merged with existing in DB.',
+    },
+    export: {
+      title: 'Export to files',
+      message: 'Export data from DB to files? All language files will be overwritten.',
+    }
   }
 }
